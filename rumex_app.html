@@ -1,0 +1,2932 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUMEX Автомивка v3.8</title>
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<script>(function(){var v='33';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--surface:#141414;--card:#1e1e1e;
+  --accent:#cc0000;--accent2:#ff2222;
+  --text:#f0ede8;--text2:#c8c4be;--muted:#888480;
+  --success:#2ecc71;--danger:#cc0000;--warn:#e67e22;
+  --border:#2a2a2a;--green:#2ecc71;--gold:#f0ede8;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;overflow-x:hidden}
+header{background:#000;border-bottom:3px solid var(--accent);padding:0 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.6);flex-wrap:wrap}
+.logo-circle{width:52px;height:52px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;flex-shrink:0;margin:10px 0;box-shadow:0 0 18px rgba(204,0,0,.5)}
+.logo-text h1{font-size:22px;font-weight:900;letter-spacing:.15em;color:var(--text)}
+.logo-text p{font-size:10px;color:#666;letter-spacing:.2em;text-transform:uppercase}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+#clock{font-family:Consolas,monospace;font-size:15px;color:#888}
+.date-badge{background:var(--bg);border:1px solid #222;border-radius:3px;padding:6px 14px;font-size:12px;color:#666}
+.tabs{display:flex;background:#000;border-bottom:2px solid #2a2a2a;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:14px 22px;font-size:13px;font-weight:700;color:#666;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:.2s;margin-bottom:-2px;letter-spacing:.04em}
+.tab:hover{color:#fff;background:rgba(255,255,255,.04)}
+.tab.active{color:#fff;border-bottom-color:var(--accent);background:rgba(204,0,0,.08)}
+.tab-content{display:none;padding:20px}
+.tab-content.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.12em;text-transform:uppercase;border-left:3px solid var(--accent);padding-left:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-box{background:var(--surface);border:1px solid #222;border-radius:4px;padding:16px;text-align:center;border-top:3px solid var(--accent)}
+.stat-box.green{border-top-color:var(--success)}.stat-box.gold{border-top-color:var(--text)}.stat-box.orange{border-top-color:var(--warn)}.stat-box.red{border-top-color:var(--danger)}
+.stat-val{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea{background:var(--bg);border:1px solid #2a2a2a;color:var(--text);font-size:14px;padding:10px 12px;border-radius:3px;outline:none;transition:border-color .2s;font-family:inherit;width:100%}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(204,0,0,.2)}
+select option{background:var(--card);color:var(--text)}
+.btn{padding:10px 18px;border:none;border-radius:3px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{filter:brightness(1.1)}
+.btn-danger{background:#cc0000;color:#fff}.btn-danger:hover{filter:brightness(1.1)}
+.btn-gold{background:var(--gold);color:#0a0a0a;font-weight:800}
+.btn-ghost{background:var(--card);color:#888;border:1px solid #2a2a2a}.btn-ghost:hover{border-color:var(--accent);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.tbl-wrap{overflow-x:auto;border-radius:2px;border:1px solid #1e1e1e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#000;color:#888;padding:11px 12px;text-align:left;font-weight:700;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.1em;border-bottom:2px solid var(--accent)}
+td{padding:10px 12px;border-bottom:1px solid #1a1a1a;color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(204,0,0,.05);color:var(--text)}
+.tbl-num{color:var(--muted);font-size:12px;width:40px;text-align:center}
+td input,td select{background:transparent;border:none;color:var(--text);padding:4px 6px;font-size:13px;width:100%;min-width:80px}
+td input:focus,td select:focus{background:var(--card);border:1px solid var(--accent);border-radius:3px;outline:none}
+.total-row td{background:rgba(204,0,0,.08);color:#fff;font-weight:700;border-top:2px solid var(--accent);text-align:center}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-card{background:rgba(255,255,255,.08);color:#aaa}
+.badge-cash{background:rgba(46,204,113,.2);color:#2ecc71}
+.badge-firm{background:rgba(230,126,34,.2);color:#e67e22}
+.badge-unpaid{background:rgba(204,0,0,.2);color:#cc0000}
+.pay-pills{display:flex;gap:6px;flex-wrap:wrap}
+.pay-pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;background:rgba(255,255,255,.06);color:#aaa;transition:.15s}
+.pay-pill:hover{color:#fff}
+.pp-active-card{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.pp-active-cash{background:var(--success)!important;color:#fff!important;border-color:var(--success)!important}
+.pp-active-firm{background:var(--warn)!important;color:#fff!important;border-color:var(--warn)!important}
+.pp-active-unpaid{background:#cc0000!important;color:#fff!important;border-color:#cc0000!important}
+.repeat{color:#ffd54f;font-size:11px;font-weight:700}
+.month-block{margin-bottom:8px;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.month-hdr{background:#000;padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;letter-spacing:.08em;user-select:none}
+.month-hdr:hover{background:#111}
+.month-arr{transition:transform .3s;font-size:11px;color:var(--accent)}
+.month-hdr.open .month-arr{transform:rotate(180deg)}
+.days-grid{display:none;background:var(--surface);padding:10px;flex-wrap:wrap;gap:6px}
+.days-grid.open{display:flex}
+.day-btn{width:38px;height:38px;border-radius:4px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;position:relative;user-select:none}
+.day-btn:hover{border-color:var(--accent);color:#fff}
+.day-btn.has-data{background:rgba(204,0,0,.15);border-color:var(--accent);color:var(--text)}
+.day-btn.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.day-dot{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent)}
+.month-info{padding:6px 16px 10px;font-size:11px;color:var(--muted);background:var(--surface)}
+.info-box{background:rgba(204,0,0,.06);border:1px solid rgba(204,0,0,.2);border-left:3px solid var(--accent);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.8}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--success);color:#fff;padding:12px 22px;border-radius:4px;font-weight:700;font-size:14px;transform:translateY(80px);opacity:0;transition:.3s;z-index:999}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.err{background:#cc0000}
+/* STAFF MANAGER */
+.staff-item{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:.2s}
+.staff-item:hover{border-color:var(--accent);background:rgba(204,0,0,.05)}
+.staff-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.staff-name{font-size:15px;font-weight:700;color:var(--text)}
+.staff-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.staff-actions{margin-left:auto;display:flex;gap:8px}
+.staff-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.sbar{background:#1a1a1a;border-radius:3px;height:8px;overflow:hidden;margin-top:6px}
+.sbar-fill{height:100%;border-radius:3px;transition:width .4s}
+
+
+/* SCHEDULE */
+#schedTable th{background:#000;color:#888;padding:10px 8px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.06em;border:1px solid #222;white-space:nowrap}
+#schedTable th.staff-col{text-align:left;min-width:100px;padding-left:12px}
+#schedTable td{padding:0;border:1px solid #1a1a1a;text-align:center;min-width:80px}
+#schedTable td.staff-name-cell{text-align:left;padding:10px 12px;font-weight:700;font-size:13px;color:var(--text);background:var(--card);white-space:nowrap}
+.sched-cell{padding:8px 4px;font-size:12px;font-weight:700;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.sched-cell:hover{filter:brightness(1.2);outline:2px solid #fff}
+.sched-8-20{background:#27ae60;color:#fff}
+.sched-pochiva{background:#e74c3c;color:#fff}
+.sched-kasa{background:#2980b9;color:#fff}
+.sched-uni{background:#8e44ad;color:#fff}
+.sched-17-20{background:#f39c12;color:#000}
+.sched-other{background:#555;color:#fff}
+.sched-empty{background:var(--bg);color:#333}
+.day-header{font-size:12px;font-weight:700}
+.day-date{font-size:10px;color:#666;margin-top:2px}
+.day-today{background:#1a0000!important;border-bottom:2px solid var(--accent)!important}
+
+
+/* COLLAPSIBLE */
+#firmCardBody,#reportCardBody{transition:all .2s}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
+@media(max-width:768px){
+  /* Статистики */
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+
+  /* Header */
+  header{padding:8px 12px;gap:10px;flex-wrap:wrap}
+  .logo-circle{width:40px;height:40px;font-size:20px}
+  .logo-text h1{font-size:16px}
+  .logo-text p{display:none}
+  #clock{display:none}
+  .date-badge{font-size:10px;padding:4px 8px}
+  #userBadgeWrap{order:-1;width:100%}
+
+  /* Tabs */
+  .tab{padding:10px 14px;font-size:11px}
+
+  /* Tab content */
+  .tab-content{padding:12px}
+
+  /* Cards */
+  .card{padding:12px}
+  .card-title{font-size:11px}
+
+  /* Таблиците — скрий по-маловажни колони */
+  .hide-mobile{display:none!important}
+
+  /* Журнал таблица — само важните колони */
+  #journalBody td:nth-child(4),
+  #journalBody td:nth-child(8),
+  thead tr th:nth-child(4),
+  thead tr th:nth-child(8){display:none}
+
+  /* Бутони */
+  .btn{padding:8px 12px;font-size:12px}
+  .btn-row{gap:6px}
+
+  /* Pay pills */
+  .pay-pills{gap:4px}
+  .pay-pill{padding:4px 8px;font-size:11px}
+
+  /* Stat boxes */
+  .stat-val{font-size:18px}
+  .stat-lbl{font-size:9px}
+
+  /* Цялостен отчет */
+  #tab-full > div{grid-template-columns:1fr!important}
+
+  /* Backup панел */
+  #backupPanel > div{margin:12px;padding:16px}
+  .backup-item{flex-direction:column;align-items:flex-start;gap:8px}
+
+  /* Login */
+  .login-box{padding:24px 20px;margin:16px}
+  .login-title{font-size:20px}
+
+  /* Archive days grid */
+  .days-grid{gap:4px}
+  .day-btn{width:34px;height:34px;font-size:11px}
+
+  /* Form inputs */
+  input,select{font-size:16px!important}
+}
+
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .tab{padding:8px 10px;font-size:10px}
+  .logo-circle{width:36px;height:36px;font-size:18px}
+}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999}
+#loginScreen.hidden{display:none}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:40px;width:100%;max-width:360px;text-align:center}
+.login-logo{font-size:48px;margin-bottom:8px}
+.login-title{font-size:24px;font-weight:900;letter-spacing:.15em;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:11px;color:#666;letter-spacing:.2em;margin-bottom:30px}
+.login-box input{margin-bottom:12px;text-align:center;font-size:15px;padding:14px}
+.login-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:3px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.1em;margin-top:4px}
+.login-btn:hover{background:var(--accent2)}
+.login-err{color:#cc0000;font-size:13px;margin-top:10px;min-height:20px}
+.user-badge{background:rgba(204,0,0,.15);border:1px solid rgba(204,0,0,.3);border-radius:3px;padding:4px 12px;font-size:12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block}
+.sync-dot.off{background:#666}
+.logout-btn{background:none;border:none;color:#666;font-size:11px;cursor:pointer;padding:2px 6px}
+.logout-btn:hover{color:#cc0000}
+
+.backup-item{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.backup-item:hover{border-color:var(--accent)}
+.backup-time{font-size:13px;font-weight:700;color:var(--text)}
+.backup-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.backup-auto{font-size:10px;color:var(--muted);background:var(--surface);border-radius:3px;padding:2px 7px}
+.backup-manual{font-size:10px;color:var(--accent);background:rgba(204,0,0,.1);border-radius:3px;padding:2px 7px;border:1px solid rgba(204,0,0,.3)}
+
+/* МИЯЧИ VIEW */
+#washerView{display:none;padding:16px}
+.washer-header{background:#000;border:1px solid var(--accent);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.washer-title{font-size:16px;font-weight:900;color:var(--text);letter-spacing:.1em}
+.washer-date{font-size:13px;color:var(--muted)}
+.washer-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.washer-stat{background:var(--surface);border:1px solid #222;border-radius:4px;padding:14px;text-align:center;border-top:3px solid var(--accent)}
+.washer-stat.green{border-top-color:var(--success)}
+.washer-stat-val{font-size:24px;font-weight:800;color:var(--text)}
+.washer-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.washer-table thead th{background:#000;color:#888;padding:10px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-bottom:2px solid var(--accent)}
+.washer-table td{padding:10px 12px;border-bottom:1px solid #1a1a1a;color:var(--text2)}
+.washer-table tr:hover td{background:rgba(204,0,0,.05);color:var(--text)}
+.washer-table tr:last-child td{border-bottom:none}
+#washerLiveTag{display:inline-flex;align-items:center;gap:6px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#2ecc71}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TOUCH FRIENDLY */
+button,select,input{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tab,.day-btn,.pay-pill,.btn{touch-action:manipulation}
+.tbl-wrap{-webkit-overflow-scrolling:touch}
+select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%23888' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+</style>
+</head>
+<body>
+
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">&#10010;</div>
+    <div class="login-title">RUMEX</div>
+    <div class="login-sub">АВТОМИВКА · СИСТЕМА ЗА УПРАВЛЕНИЕ</div>
+    <input id="loginUser" type="text" placeholder="Потребителско име" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Парола" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ВХОД</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo-circle">✚</div>
+  <div class="logo-text">
+    <h1>RUMEX</h1>
+    <p>Автомивка · Система за управление</p>
+  </div>
+  <div class="header-right" id="userBadgeWrap" style="display:none"><div class="user-badge"><span class="sync-dot off" id="syncDot"></span>&nbsp;<span id="curUser" style="color:var(--accent);font-weight:700"></span>&nbsp;<button class="logout-btn" onclick="doLogout()">Изход</button></div></div><div class="header-right">
+    <div class="date-badge" id="dateBadge"></div>
+    <div id="clock"></div>
+    <button onclick="location.reload()" title="Презареди" style="background:var(--card);border:1px solid #2a2a2a;color:#888;border-radius:3px;padding:6px 10px;cursor:pointer;font-size:15px;line-height:1;transition:.2s" onmouseover="this.style.color='#fff';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='#888';this.style.borderColor='#2a2a2a'">⟳</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('journal',this)">📋 Дневен журнал</div>
+  <div class="tab"        onclick="switchTab('staff',this)">👥 Оборот служители</div>
+  <div class="tab"        onclick="switchTab('full',this)">💰 Цялостен отчет</div>
+  <div class="tab"        onclick="switchTab('prices',this)">💲 Услуги и цени</div>
+  <div class="tab"        onclick="switchTab('brands',this)">🚗 Марки</div>
+  <div class="tab"        onclick="switchTab('registry',this)">🗂️ Регистър коли</div>
+  <div class="tab"        onclick="switchTab('archive',this)">📅 Архив</div>
+  <div class="tab"        onclick="switchTab('schedule',this)">📆 График</div>
+  <div class="tab"        onclick="switchTab('staffmgr',this)">👤 Служители</div>
+  <div class="tab" id="tabMiachi" onclick="switchTab('miachi',this)" style="display:none">🔒 Миячи</div>
+  <div class="tab"        onclick="switchTab('stats',this)" id="statsTab">📈 Статистика</div>
+</div>
+
+
+<!-- BACKUP PANEL -->
+<div id="backupPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:28px;width:100%;max-width:560px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.1em;border-left:3px solid var(--accent);padding-left:10px">☁️ BACKUP СИСТЕМА</div>
+      <button onclick="closeBackupPanel()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-primary btn-sm" onclick="createBackupNow()">💾 Създай backup сега</button>
+      <button class="btn btn-ghost btn-sm"   onclick="loadBackupList()">🔄 Обнови списъка</button>
+    </div>
+    <div id="backupList" style="display:flex;flex-direction:column;gap:8px">
+      <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Зареждане...</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: JOURNAL -->
+<div class="tab-content active" id="tab-journal">
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="card">
+    <div class="card-title">➕ Добави нов запис</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Рег. номер</label>
+        <input id="fReg" type="text" placeholder="РВ0000АА" oninput="checkRepeat(this.value)" style="text-transform:uppercase">
+        <span id="repeatHint" style="display:none;font-size:12px;font-weight:700"></span>
+      </div>
+      <div class="form-group"><label>Марка / Фирма</label><select id="fBrand"></select></div>
+      <div class="form-group"><label>Вид услуга</label><select id="fService"></select></div>
+      <div class="form-group"><label>Служител</label><select id="fStaff"></select></div>
+      <div class="form-group"><label>Цена с ДДС (€)</label><input id="fPrice" type="number" step="0.01" placeholder="0.00" oninput="calcNoVat()"></div>
+      <div class="form-group"><label>Цена без ДДС (€)</label><input id="fPriceNoVat" type="number" step="0.01" placeholder="0.00" readonly style="opacity:.5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Начин на плащане</label>
+        <div class="pay-pills">
+          <div class="pay-pill pp-active-card" onclick="selectPay('Карта',this,'pp-active-card')">💳 Карта</div>
+          <div class="pay-pill"               onclick="selectPay('В брой',this,'pp-active-cash')">💵 В брой</div>
+          <div class="pay-pill"               onclick="selectPay('Фирма',this,'pp-active-firm')">🏢 Фирма</div>
+          <div class="pay-pill"               onclick="selectPay('Неплатена',this,'pp-active-unpaid')">❌ Неплатена</div>
+        </div>
+      </div>
+      <div class="form-group"><label>Бележки</label><input id="fNotes" type="text" placeholder="Незадължително..."></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="addRow()">➕ Добави запис</button>
+      <button class="btn btn-ghost"   onclick="clearForm()">🗑️ Изчисти</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📋 Записи за деня</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-success btn-sm" onclick="saveToArchive()">💾 Запази в архив</button>
+        <button class="btn btn-danger btn-sm"  onclick="clearJournal()">🗑️ Изчисти журнала</button>
+        <button class="btn btn-gold btn-sm"    onclick="showBackupPanel()">☁️ Backup</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th class="tbl-num">№</th><th>Час</th><th>Рег. №</th><th>Марка</th>
+          <th>Услуга</th><th>Служител</th><th>€ с ДДС</th><th>€ без ДДС</th>
+          <th>Плащане</th><th>Бележки</th><th></th>
+        </tr></thead>
+        <tbody id="journalBody"></tbody>
+        <tfoot><tr class="total-row">
+          <td colspan="6" style="text-align:right">ОБЩО ЗА ДЕНЯ:</td>
+          <td id="totVat">0.00 €</td><td id="totNoVat">0.00 €</td><td colspan="3"></td>
+        </tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: STAFF -->
+<div class="tab-content" id="tab-staff">
+  <div class="card">
+    <div class="card-title">👥 Оборот по служители</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Служител</th>
+        <th style="text-align:center">Оборот с ДДС (€)</th>
+        <th style="text-align:center">Оборот без ДДС (€)</th>
+        <th style="text-align:center">Брой услуги</th>
+      </tr></thead>
+      <tbody id="staffBody"></tbody>
+      <tfoot><tr class="total-row">
+        <td>ОБЩО:</td><td id="stTotVat">0.00 €</td><td id="stTotNoVat">0.00 €</td><td id="stTotCount">0</td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+</div>
+
+
+
+<!-- TAB: FULL -->
+<div class="tab-content" id="tab-full">
+
+  <!-- Горни карти: Плащания + Кафене + Общо -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">💳 Плащания</div>
+      <table style="width:100%">
+        <tr><td style="color:var(--muted)">💳 Карта (€)</td><td style="text-align:right;font-weight:700" id="flCard">0.00</td></tr>
+        <tr><td style="color:var(--success)">💵 В брой (€)</td><td style="text-align:right;font-weight:700;color:var(--success)" id="flCash">0.00</td></tr>
+        <tr><td style="color:var(--warn)">🏢 Фирма (€)</td><td style="text-align:right;font-weight:700;color:var(--warn)" id="flFirm">0.00</td></tr>
+        <tr><td style="color:#cc0000">❌ Неплатени (€)</td><td style="text-align:right;font-weight:700;color:#cc0000" id="flUnpaid">0.00</td></tr>
+        <tr id="flCafeRow"><td style="color:var(--muted)">☕ Кафене (€)</td><td style="text-align:right;font-weight:700;color:var(--muted)" id="flCafeVal">0.00</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">☕ Кафене</div>
+      <div class="form-group"><label>Приходи кафене (€)</label><input id="cafeIncome" type="number" step="0.01" value="0" placeholder="0.00" oninput="renderFull()"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-success btn-sm" onclick="saveCafeIncome()" style="flex:1">💾 Запази кафене</button>
+        <button class="btn btn-primary btn-sm" onclick="saveToArchive()" style="flex:1">📅 Архивирай деня</button>
+      </div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--muted);font-size:13px">Налично (€)<br><span style="font-size:10px;color:#555">Карта + В брой + Кафене</span></span>
+        <span style="font-size:22px;font-weight:800;color:var(--gold)" id="flNalichno">0.00</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Общо</div>
+      <table style="width:100%">
+        <tr><td style="color:var(--muted)">Общо приходи с ДДС (€)</td><td style="text-align:right;font-weight:700;color:var(--accent)" id="flTotal">0.00</td></tr>
+        <tr><td style="color:var(--muted)">Брой автомобили</td><td style="text-align:right;font-weight:700" id="flCars">0</td></tr>
+        <tr><td style="color:var(--muted)">Общо неплатени (€)</td><td style="text-align:right;font-weight:700;color:#cc0000" id="flAllUnpaid">0.00</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Фирми / Неплатени — разширяват се надолу -->
+  <div class="card" id="firmCard">
+    <div class="card-title" style="cursor:pointer;justify-content:space-between" onclick="toggleFirmCard()">
+      <span>🏢 Фирми / Неплатени</span>
+      <span id="firmToggleIcon" style="color:var(--accent);font-size:16px">▾</span>
+    </div>
+    <div id="firmCardBody">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Марка / Фирма</th><th style="text-align:right">Сума (€)</th></tr></thead>
+        <tbody id="firmBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- Отчет Възнаграждения -->
+  <div class="card">
+    <div class="card-title" style="cursor:pointer;justify-content:space-between" onclick="toggleReportCard()">
+      <span>📊 Отчет — Възнаграждения</span>
+      <span id="reportToggleIcon" style="color:var(--accent);font-size:16px">▾</span>
+    </div>
+    <div id="reportCardBody">
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>Служител</th>
+          <th style="text-align:center">Оборот с ДДС (€)</th>
+          <th style="text-align:center">Оборот без ДДС (€)</th>
+          <th style="text-align:center">Брой услуги</th>
+          <th style="text-align:center">Възнаграждение (€)</th>
+        </tr></thead>
+        <tbody id="reportBody"></tbody>
+        <tfoot><tr class="total-row">
+          <td>ОБЩО:</td><td id="rpTotVat">0.00 €</td><td id="rpTotNoVat">0.00 €</td><td id="rpTotCount">0</td><td id="rpTotBonus">0.00 €</td>
+        </tr></tfoot>
+      </table></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB: PRICES -->
+<div class="tab-content" id="tab-prices">
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>💲 Ценоразпис</span>
+      <button class="btn btn-primary btn-sm" onclick="addService()">➕ Добави</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Услуга</th><th>Цена (€)</th><th>Описание</th><th></th></tr></thead>
+      <tbody id="pricesBody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- TAB: BRANDS -->
+<div class="tab-content" id="tab-brands">
+  <div class="card">
+    <div class="card-title">🚗 Марки / Фирми</div>
+    <div class="form-row" style="max-width:400px;margin-bottom:14px">
+      <div class="form-group">
+        <label>Добави нова марка</label>
+        <div style="display:flex;gap:8px">
+          <input id="newBrand" type="text" placeholder="Нова марка...">
+          <button class="btn btn-primary" onclick="addBrand()">➕</button>
+        </div>
+      </div>
+    </div>
+    <div id="brandsList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+</div>
+
+<!-- TAB: REGISTRY -->
+<div class="tab-content" id="tab-registry">
+  <div class="card">
+    <div class="card-title">🗂️ Регистър на автомобили</div>
+    <div class="form-group" style="max-width:300px;margin-bottom:14px">
+      <label>Търси</label>
+      <input id="regSearch" type="text" placeholder="РВ..." oninput="renderRegistry()" style="text-transform:uppercase">
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>№</th><th>Рег. №</th><th>Статус</th><th>Посещения</th></tr></thead>
+      <tbody id="registryBody"></tbody>
+    </table></div>
+    <div id="regPagination"></div>
+  </div>
+</div>
+
+<!-- TAB: ARCHIVE -->
+<div class="tab-content" id="tab-archive">
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📅 Годишен архив</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm"   onclick="restoreFromOneDrive()">☁️ Зареди</button>
+        <button class="btn btn-primary btn-sm" onclick="backupToOneDrive()">☁️ Backup</button>
+        <select id="archiveYear" onchange="renderArchive()" style="width:100px"></select>
+      </div>
+    </div>
+    <div id="monthsList"></div>
+  </div>
+
+  <div class="card" id="dayPreviewCard" style="display:none">
+    <div class="card-title" style="justify-content:space-between">
+      <span id="dayPreviewTitle">📋 Преглед</span>
+      <div style="display:flex;gap:8px">
+<button class="btn btn-danger btn-sm" onclick="deleteArchiveDay()">🗑️ Изтрий</button>
+        <button class="btn btn-gold btn-sm"   onclick="exportArchiveDay()">📤 Експорт</button>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 <strong style="color:var(--text)">Как работи:</strong><br>
+      • <strong style="color:var(--success)">💾 Запази в архив</strong> — запазва текущия ден от Дневен журнал<br>
+      • Ако е запазено погрешно → <strong style="color:#cc0000">🗑️ Изтрий</strong> (парола: rumex2026) → коригирай → запази отново<br>
+      • При всяко запазване се прави автоматичен backup в OneDrive
+    </div>
+    <div id="archiveStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px"></div>
+    <div class="card-title" style="margin-bottom:8px">📋 Журнал</div>
+    <div class="tbl-wrap" style="margin-bottom:16px"><table>
+      <thead><tr><th class="tbl-num">№</th><th>Час</th><th>Рег. №</th><th>Марка</th><th>Услуга</th><th>Служител</th><th>€ с ДДС</th><th>Плащане</th></tr></thead>
+      <tbody id="archiveJournalBody"></tbody>
+    </table></div>
+    <div class="card-title" style="margin-bottom:8px">👥 Оборот служители</div>
+    <div class="tbl-wrap" style="margin-bottom:16px"><table>
+      <thead><tr><th>Служител</th><th style="text-align:center">Оборот с ДДС (€)</th><th style="text-align:center">Брой</th><th style="text-align:center">Възнаграждение (€)</th></tr></thead>
+      <tbody id="archiveStaffBody"></tbody>
+    </table></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div id="archivePayments"></div>
+      <div>
+        <div id="archiveFirms"></div>
+        <div style="margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.1em;margin-bottom:8px">☕ КАФЕНЕ</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="number" step="0.01" id="archiveCafeInput" placeholder="0.00"
+              style="flex:1;font-size:15px;font-weight:700"
+              onchange="updateArchiveCafe(this.value)">
+            <span style="font-size:11px;color:var(--muted)">€</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- TAB: SCHEDULE -->
+<div class="tab-content" id="tab-schedule">
+
+  <!-- Контроли -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:16px">
+    <div class="form-group" style="flex:1;min-width:140px">
+      <label>От дата</label>
+      <input type="date" id="schedFrom" onchange="renderSchedule()">
+    </div>
+    <div class="form-group" style="flex:1;min-width:140px">
+      <label>До дата</label>
+      <input type="date" id="schedTo" onchange="renderSchedule()">
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="setSchedPeriod('week')">Тази седмица</button>
+    <button class="btn btn-ghost btn-sm" onclick="setSchedPeriod('next')">Следваща</button>
+    <button class="btn btn-ghost btn-sm" onclick="setSchedPeriod('prev')">Предишна</button>
+  </div>
+
+  <!-- Легенда — интерактивна лента -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+    <div id="schedLegend" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1"></div>
+    <div style="display:flex;gap:8px;margin-left:auto">
+      <button class="btn btn-success btn-sm" onclick="openAddShiftModal()">➕ Добави смяна</button>
+      <button class="btn btn-primary btn-sm" onclick="exportSchedule()">📤 Експорт</button>
+    </div>
+  </div>
+
+  <!-- Подсказка за избрана смяна -->
+  <div id="schedSelectedHint" style="display:none;background:rgba(204,0,0,.08);border:1px solid var(--accent);border-radius:4px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:var(--text)">
+    ✅ Избрана смяна: <strong id="schedSelectedName"></strong> — натисни клетка от таблицата за да я приложиш
+  </div>
+
+  <!-- Таблица с графика -->
+  <div style="overflow-x:auto;border-radius:4px;border:1px solid var(--border)">
+    <table id="schedTable" style="width:100%;border-collapse:collapse;min-width:700px">
+      <thead id="schedHead"></thead>
+      <tbody id="schedBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Модал: Избор/запазване на смяна за клетка -->
+  <div id="schedModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;width:100%;max-width:380px">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.1em;border-left:3px solid var(--accent);padding-left:10px;margin-bottom:6px" id="schedModalTitle">Редактирай смяна</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px" id="schedModalCurrent"></div>
+      <label style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px">Избери нова смяна</label>
+      <div id="schedShiftBtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveSchedCell()">💾 Запази</button>
+        <button class="btn btn-danger btn-sm" onclick="clearSchedCell()">🗑️ Премахни</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeSchedModal()">Отказ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модал: Добави нова смяна -->
+  <div id="addShiftModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;width:100%;max-width:360px">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.1em;border-left:3px solid var(--success);padding-left:10px;margin-bottom:16px">➕ Нова смяна</div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Текст</label>
+        <input id="addShiftText" type="text" placeholder="напр. 10-18, ОБЕД...">
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Цвят</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" id="addShiftColorPicker"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-success" style="flex:1" onclick="confirmAddShift()">✅ Добави</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('addShiftModal').style.display='none'">Отказ</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB: STAFF MANAGER -->
+<div class="tab-content" id="tab-staffmgr">
+  <div class="card">
+    <div class="card-title">👤 Управление на служители</div>
+    <div class="form-row" style="max-width:400px;margin-bottom:20px">
+      <div class="form-group">
+        <label>Добави нов служител</label>
+        <div style="display:flex;gap:8px">
+          <input id="newStaffName" type="text" placeholder="Име на служителя...">
+          <button class="btn btn-primary" onclick="addStaff()">➕</button>
+        </div>
+      </div>
+    </div>
+    <div id="staffList"></div>
+  </div>
+</div>
+
+<!-- TAB: МИЯЧИ (само Admin) -->
+<div class="tab-content" id="tab-miachi">
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📱 Достъп на миячите</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="washerAccessLabel" style="font-size:12px;font-weight:700"></span>
+        <button id="washerAccessBtn" onclick="toggleWasherAccess()" class="btn btn-sm" style="min-width:120px"></button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">
+      При деактивиране миячите виждат заключен екран и не могат да ползват приложението.
+    </div>
+  </div>
+</div>
+
+<!-- TAB: STATS -->
+<div class="tab-content" id="tab-stats">
+
+  <!-- Филтър от/до -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px">
+    <div class="form-group" style="flex:1;min-width:140px">
+      <label>От дата</label>
+      <input type="date" id="statsDateFrom" onchange="renderAllStats()">
+    </div>
+    <div class="form-group" style="flex:1;min-width:140px">
+      <label>До дата</label>
+      <input type="date" id="statsDateTo" onchange="renderAllStats()">
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="setStatsPeriod('week')">Седмица</button>
+    <button class="btn btn-ghost btn-sm" onclick="setStatsPeriod('month')">Месец</button>
+    <button class="btn btn-ghost btn-sm" onclick="setStatsPeriod('year')">Година</button>
+    <button class="btn btn-primary btn-sm" onclick="setStatsPeriod('all')">Всичко</button>
+  </div>
+
+  <!-- Служители -->
+  <div class="card">
+    <div class="card-title">👥 Статистика на служителите</div>
+    <div id="staffStatsContent"></div>
+  </div>
+
+  <!-- ТОП КЛАСАЦИЯ по бройки -->
+  <div class="card">
+    <div class="card-title">🏆 Топ миячи — по брой услуги</div>
+    <div id="topWasherContent"></div>
+  </div>
+
+  <!-- Услуги -->
+  <div class="card">
+    <div class="card-title">📈 Статистика на услугите</div>
+    <div id="statsContent"></div>
+  </div>
+
+  <!-- Индивидуална статистика на служител -->
+  <div class="card" id="staffStatCard" style="display:none">
+    <div class="card-title" style="justify-content:space-between">
+      <span id="staffStatName">👤 Детайлна статистика</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeStaffStat()">✕ Затвори</button>
+    </div>
+    <div id="staffStatContent"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- МИЯЧИ VIEW -->
+<div id="washerView">
+  <!-- Заключен екран -->
+  <div id="washerLocked" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+    <div style="font-size:56px">🔒</div>
+    <div style="font-size:20px;font-weight:900;color:var(--text);letter-spacing:.1em">ДОСТЪПЪТ Е ДЕАКТИВИРАН</div>
+    <div style="font-size:13px;color:var(--muted)">Свържете се с администратора</div>
+    <button onclick="doLogout()" style="margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:4px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.08em">← Изход</button>
+  </div>
+  <div class="washer-header">
+    <div>
+      <div class="washer-title">🚗 RUMEX — Журнал за деня</div>
+      <div class="washer-date" id="washerDateLbl"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="washerLiveTag"><span class="live-dot"></span> НА ЖИВО</div>
+      <button onclick="location.reload()" title="Презареди" style="background:rgba(255,255,255,.08);border:1px solid #333;color:#888;border-radius:3px;padding:6px 10px;cursor:pointer;font-size:15px;line-height:1;transition:.2s" onmouseover="this.style.color='#fff';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='#888';this.style.borderColor='#333'">⟳</button>
+      <div class="user-badge"><span id="washerUserLbl" style="color:var(--accent);font-weight:700"></span>&nbsp;<button class="logout-btn" onclick="doLogout()">Изход</button></div>
+    </div>
+  </div>
+  <div class="washer-stats" id="washerStats"></div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden">
+    <div style="background:#000;padding:12px 16px;font-size:11px;font-weight:700;color:#888;letter-spacing:.1em;text-transform:uppercase;border-bottom:2px solid var(--accent)">📋 Записи</div>
+    <div style="overflow-x:auto">
+      <table class="washer-table" style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="width:36px">№</th>
+          <th>Час</th>
+          <th>Рег. №</th>
+          <th>Марка</th>
+          <th>Услуга</th>
+          <th style="text-align:right">€ с ДДС</th>
+          <th style="text-align:right">€ без ДДС</th>
+        </tr></thead>
+        <tbody id="washerJournalBody"></tbody>
+        <tfoot>
+          <tr style="background:rgba(204,0,0,.08);border-top:2px solid var(--accent)">
+            <td colspan="5" style="text-align:right;font-weight:800;color:#fff;padding:10px 12px">ОБЩО ЗА ДЕНЯ:</td>
+            <td style="text-align:right;font-weight:800;color:var(--accent);padding:10px 12px" id="washerTotVat">0.00 €</td>
+            <td style="text-align:right;font-weight:800;color:var(--muted);padding:10px 12px" id="washerTotNoVat">0.00 €</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// SUPABASE
+var _supa = supabase.createClient('https://ctukjtmzxoodbmjkvdex.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0dWtqdG16eG9vZGJtamt2ZGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTI2NTYsImV4cCI6MjA5NDQ4ODY1Nn0.LQwIVdw_dyphQNOt8g3WMbZDFZFQTf_mZZ2VZt-FzN4');
+var currentUser = null;
+
+function setSyncDot(on) {
+  var d = document.getElementById('syncDot');
+  if (d) d.className = on ? 'sync-dot' : 'sync-dot off';
+  // За миячи — живата точка в заглавието
+  var ld = document.querySelector('#washerLiveTag .live-dot');
+  if (ld) ld.style.background = on ? '#2ecc71' : '#888';
+}
+
+function doLogin() {
+  var u   = document.getElementById('loginUser').value.trim();
+  var p   = document.getElementById('loginPass').value.trim();
+  var err = document.getElementById('loginErr');
+  var btn = document.querySelector('.login-btn');
+  err.textContent  = '';
+  err.style.color  = '#cc0000';
+  if (!u || !p) { err.textContent = 'Въведи потребителско име и парола!'; return; }
+  btn.textContent = 'Зареждане...';
+  btn.disabled    = true;
+  err.textContent = 'Свързване...';
+  err.style.color = '#888';
+
+  _supa.from('users').select('*').eq('username', u).eq('password', p)
+    .then(function(res) {
+      if (res.error) {
+        err.textContent = 'Грешка: ' + res.error.message;
+        err.style.color = '#cc0000';
+        btn.textContent = 'ВХОД'; btn.disabled = false;
+        return;
+      }
+      if (!res.data || res.data.length === 0) {
+        err.textContent = '❌ Грешно потребителско име или парола!';
+        err.style.color = '#cc0000';
+        btn.textContent = 'ВХОД'; btn.disabled = false;
+        return;
+      }
+      currentUser = res.data[0];
+      localStorage.setItem('rumex_user', JSON.stringify(currentUser));
+      showApp();
+      loadFromSupabase().then(function() {
+        startSync();
+        startAutoBackup();
+      });
+    })
+    .catch(function(e) {
+      err.textContent = '⚠️ ' + (e.message || 'Грешка при връзка');
+      err.style.color = '#cc0000';
+      btn.textContent = 'ВХОД'; btn.disabled = false;
+    });
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  var role = (currentUser.role || 'admin').toLowerCase();
+  if (role === 'миячи' || role === 'moiachi' || role === 'washer') {
+    // Миячи изглед — само read-only журнал, скрий всичко останало
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('washerView').style.display = 'block';
+    document.getElementById('washerUserLbl').textContent = currentUser.username;
+    document.getElementById('washerDateLbl').textContent =
+      new Date().toLocaleDateString('bg-BG', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    // Скрий таб съдържанието
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.style.display = 'none'; });
+    // Провери дали достъпът е активен
+    loadWasherAccess().then(function(enabled) {
+      var locked = document.getElementById('washerLocked');
+      if (locked) locked.style.display = enabled ? 'none' : 'flex';
+    });
+  } else {
+    // Пълен достъп — само admin вижда таба Миячи
+    document.getElementById('userBadgeWrap').style.display = 'flex';
+    document.getElementById('curUser').textContent = currentUser.username;
+    // Провери дали е admin (не моячи) — покажи таба
+    var mt = document.getElementById('tabMiachi');
+    if (mt) mt.style.display = '';
+  }
+}
+
+function doLogout() {
+  if (!confirm('Изход?')) return;
+  localStorage.removeItem('rumex_user');
+  currentUser = null;
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('userBadgeWrap').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+async function loadFromSupabase() {
+  setSyncDot(false);
+  try {
+    var today = new Date().toISOString().split('T')[0];
+    var jRes = await _supa.from('journal').select('*').eq('date',today).order('id');
+    if (!jRes.error && jRes.data) {
+      journal = jRes.data.map(function(r) {
+        return {id:r.id,time:r.time,reg:r.reg,brand:r.brand,service:r.service,
+                staff:r.staff,price:parseFloat(r.price),priceNoVat:parseFloat(r.price_no_vat),
+                pay:r.pay,notes:r.notes||'',incomplete:r.incomplete};
+      });
+    }
+    var sRes = await _supa.from('settings').select('*');
+    if (!sRes.error && sRes.data) {
+      sRes.data.forEach(function(row) {
+        if (row.key==='brands')   brands   = row.value;
+        if (row.key==='services') services = row.value;
+        if (row.key==='registry') registry = row.value;
+        if (row.key==='staff')    { STAFF = row.value; localStorage.setItem('rumex_staff', JSON.stringify(STAFF)); }
+      });
+    }
+    var aRes = await _supa.from('archive').select('*');
+    if (!aRes.error && aRes.data) {
+      archive = {};
+      aRes.data.forEach(function(row) {
+        if (!archive[row.year]) archive[row.year]={};
+        if (!archive[row.year][row.month]) archive[row.year][row.month]={};
+        archive[row.year][row.month][row.day] = row.data;
+      });
+    }
+    // Зареди registry от Supabase
+    var rRes = await _supa.from('registry').select('plate');
+    if (!rRes.error && rRes.data) {
+      BASE_PLATES = rRes.data.map(function(r){ return r.plate; });
+      registry = Array.from(new Set(BASE_PLATES.concat(_savedRegistry)));
+    }
+    setSyncDot(true);
+    if (isWasherRole()) {
+      renderWasherJournal();
+    } else {
+      initSelects();
+      renderJournal();
+      var _at = (document.querySelector('.tab-content.active')||{}).id||'';
+      if (_at==='tab-staff')    renderStaff();
+      if (_at==='tab-staffmgr') renderStaffMgr();
+      if (_at==='tab-stats')    setStatsPeriod('month');
+      if (_at==='tab-full')     { renderFull(); renderReport(); }
+      if (_at==='tab-archive')  renderArchive();
+    }
+  } catch(e) { setSyncDot(false); console.error(e); }
+}
+
+var _pushingIds = {}; // IDs които в момента се записват
+
+async function pushRow(row) {
+  var today = new Date().toISOString().split('T')[0];
+  _pushingIds[row.id] = true; // блокирай realtime за този ред
+  try {
+    await _supa.from('journal').upsert({
+      id:row.id, time:row.time, reg:row.reg, brand:row.brand,
+      service:row.service, staff:row.staff, price:row.price,
+      price_no_vat:row.priceNoVat, pay:row.pay, notes:row.notes||'',
+      incomplete:row.incomplete, date:today
+    });
+  } finally {
+    // Освободи блокировката след 3 секунди
+    setTimeout(function(){ delete _pushingIds[row.id]; }, 3000);
+  }
+}
+async function removeRow(id)     { await _supa.from('journal').delete().eq('id',id); }
+async function pushSettings(k,v) { await _supa.from('settings').upsert({key:k,value:v}); }
+async function pushArchive(y,m,d,data) { await _supa.from('archive').upsert({year:y,month:m,day:d,data:data,saved_at:data.savedAt},{onConflict:'year,month,day'}); }
+async function removeArchive(y,m,d)    { await _supa.from('archive').delete().eq('year',y).eq('month',m).eq('day',d); }
+
+function startSync() {
+  _supa.channel('rumex-live')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'journal'}, function(payload) {
+      var r = payload.new;
+      // Игнорирай ако е наш собствен INSERT
+      if (_pushingIds[r.id]) return;
+      var exists = journal.find(function(x){return x.id===r.id;});
+      if (!exists) {
+        journal.push({id:r.id,time:r.time,reg:r.reg,brand:r.brand,service:r.service,
+          staff:r.staff,price:parseFloat(r.price),priceNoVat:parseFloat(r.price_no_vat),
+          pay:r.pay,notes:r.notes||'',incomplete:r.incomplete});
+        renderJournal();
+        toast('🔔 Нов запис: ' + r.reg);
+      }
+    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'journal'}, function(payload) {
+      var r = payload.new;
+      // Игнорирай ако ние сме го изпратили
+      if (_pushingIds[r.id]) return;
+      // Обнови от друго устройство
+      var idx = journal.findIndex(function(x){return x.id===r.id;});
+      if (idx>=0) {
+        journal[idx] = {id:r.id,time:r.time,reg:r.reg,brand:r.brand,service:r.service,
+          staff:r.staff,price:parseFloat(r.price),priceNoVat:parseFloat(r.price_no_vat),
+          pay:r.pay,notes:r.notes||'',incomplete:r.incomplete};
+        renderJournal();
+      }
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'journal'}, function(payload) {
+      journal = journal.filter(function(x){return x.id!==payload.old.id;});
+      renderJournal();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'archive'}, function() {
+      loadFromSupabase();
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'registry'}, function(payload) {
+      if (payload.new && !BASE_PLATES.includes(payload.new.plate)) {
+        BASE_PLATES.push(payload.new.plate);
+        registry = Array.from(new Set(BASE_PLATES.concat(_savedRegistry)));
+      }
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'settings'}, function(payload) {
+      // Ако е промяна на washer_access — реагирай веднага
+      if (payload.new && payload.new.key === 'washer_access') {
+        var enabled = payload.new.value !== false && payload.new.value !== 'false';
+        if (isWasherRole()) {
+          var locked = document.getElementById('washerLocked');
+          if (locked) locked.style.display = enabled ? 'none' : 'flex';
+        } else {
+          updateWasherAccessUI(enabled);
+        }
+      }
+    })
+    .subscribe(function(status) {
+      setSyncDot(status === 'SUBSCRIBED');
+    });
+}
+
+// Провери сесия
+(function() {
+  var s = localStorage.getItem('rumex_user');
+  if (s) { currentUser = JSON.parse(s); showApp(); }
+})();
+
+// DATA
+let journal  = JSON.parse(localStorage.getItem('rumex_journal')  || '[]');
+let brands   = JSON.parse(localStorage.getItem('rumex_brands')   || JSON.stringify(['Audi','Mercedes','BMW','Bentley','Rolls-Royce','Ford','Renault','Range Rover','Друга','РОЯЛ','Ви Пи','ПАУЪР БРАНДС','БУЛПРОМ','ЕСОЕС','УЧИЛИЩЕ','ДЖИМИ','СМЪРФИТ','АГРИЯ','АГРОФИНАНС','МИТРОПОЛИЯ','БАЛКАН БИОСЕР','ЙОРДАН СТАВРЕВ','СУВ','ДУНАПАК','ДЖИП','БАНИЧАРКА','ПОРШЕ']));
+let services = JSON.parse(localStorage.getItem('rumex_services') || JSON.stringify([{name:'Комплексно измиване',price:20,desc:'Външно измиване'},{name:'Пълно измиване',price:35,desc:'Външно + вътрешно'},{name:'VIP почистване',price:80,desc:''},{name:'Вътрешно почистване',price:25,desc:'Прахосмукачка'},{name:'Полиране',price:60,desc:'Машинно полиране'},{name:'Двигател',price:30,desc:'Двигателен отсек'},{name:'Пастиране',price:50,desc:''},{name:'Пране',price:120,desc:''},{name:'ВЪНШНО ПОЧИСТВАНЕ',price:14.54,desc:''}]));
+// База от познати номера — зарежда се от Supabase
+var BASE_PLATES = [];
+
+// Registry = BASE_PLATES + нови от localStorage
+var _savedRegistry = JSON.parse(localStorage.getItem('rumex_registry') || '[]');
+var registry = Array.from(new Set(BASE_PLATES.concat(_savedRegistry)));
+let archive  = JSON.parse(localStorage.getItem('rumex_archive')  || '{}');
+
+var STAFF = JSON.parse(localStorage.getItem('rumex_staff') || JSON.stringify(['Сашо','Васко','Жоро','Кирил','Алекс','Мариян','Мишо','Наско']));
+const MONTHS = ['Януари','Февруари','Март','Април','Май','Юни','Юли','Август','Септември','Октомври','Ноември','Декември'];
+
+let selectedPay     = 'Карта';
+let selectedArchDay = null;
+
+function saveStaff() {
+  localStorage.setItem('rumex_staff', JSON.stringify(STAFF));
+  if (currentUser) pushSettings('staff', STAFF);
+  initSelects();
+}
+
+function save() {
+  localStorage.setItem('rumex_journal',  JSON.stringify(journal));
+  localStorage.setItem('rumex_brands',   JSON.stringify(brands));
+  localStorage.setItem('rumex_services', JSON.stringify(services));
+  var _newPlates = registry.filter(function(r){return !BASE_PLATES.includes(r);}); localStorage.setItem('rumex_registry', JSON.stringify(_newPlates));
+  localStorage.setItem('rumex_archive',  JSON.stringify(archive));
+}
+
+// CLOCK
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent = n.toLocaleTimeString('bg-BG');
+  document.getElementById('dateBadge').textContent = n.toLocaleDateString('bg-BG',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+tick(); setInterval(tick,1000);
+
+// TOAST
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = err ? 'show err' : 'show';
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// TABS
+function switchTab(id, el) {
+  // Миячи нямат достъп до нищо освен washerView
+  if (isWasherRole()) return;
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'staff')    { renderStaff();    }
+
+  if (id === 'full')     { renderFull(); renderReport(); }
+  if (id === 'prices')   { renderPrices();   }
+  if (id === 'brands')   { renderBrands();   }
+  if (id === 'registry') { renderRegistry(); }
+  if (id === 'archive')  { renderArchive();  }
+  if (id === 'schedule') { initSchedule();   }
+  if (id === 'staffmgr') { renderStaffMgr(); }
+  if (id === 'miachi')   { renderMiachiTab(); }
+  if (id === 'stats') {
+    var pass = prompt('Парола:');
+    if (pass !== 'rumex2026') { toast('Грешна парола!', true); return; }
+    setStatsPeriod('month');
+    return;
+  }
+}
+
+// HELPERS
+function fmt(n)  { return (parseFloat(n)||0).toFixed(2) + ' €'; }
+function fmtN(n) { return (parseFloat(n)||0).toFixed(2); }
+function nowTime() { return new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}); }
+function payBadge(p) {
+  if (p==='В брой')    return '<span class="badge badge-cash">💵 В брой</span>';
+  if (p==='Фирма')     return '<span class="badge badge-firm">🏢 Фирма</span>';
+  if (p==='Неплатена') return '<span class="badge badge-unpaid">❌ Неплатена</span>';
+  return '<span class="badge badge-card">💳 Карта</span>';
+}
+
+// FORM INIT
+function initSelects() {
+  var bSel = document.getElementById('fBrand');
+  bSel.innerHTML = brands.map(function(b) { return '<option value="' + b + '">' + b + '</option>'; }).join('');
+
+  var sSel = document.getElementById('fService');
+  sSel.innerHTML = services.map(function(s) { return '<option value="' + s.price + '">' + s.name + '</option>'; }).join('');
+  sSel.onchange = function() {
+    document.getElementById('fPrice').value = parseFloat(this.value).toFixed(2);
+    calcNoVat();
+  };
+
+  var stSel = document.getElementById('fStaff');
+  stSel.innerHTML = '<option value="—">— без служител —</option>' +
+    STAFF.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+}
+
+function calcNoVat() {
+  var v = parseFloat(document.getElementById('fPrice').value) || 0;
+  document.getElementById('fPriceNoVat').value = (v / 1.2).toFixed(2);
+}
+
+function selectPay(val, el, cls) {
+  selectedPay = val;
+  document.querySelectorAll('.pay-pill').forEach(function(p) {
+    p.classList.remove('pp-active-card','pp-active-cash','pp-active-firm','pp-active-unpaid');
+  });
+  el.classList.add(cls);
+}
+
+function clearForm() {
+  document.getElementById('fReg').value = '';
+  document.getElementById('fPrice').value = '';
+  document.getElementById('fPriceNoVat').value = '';
+  document.getElementById('fNotes').value = '';
+  document.getElementById('repeatHint').style.display = 'none';
+  document.getElementById('fBrand').selectedIndex = 0;
+  document.getElementById('fService').selectedIndex = 0;
+  document.getElementById('fStaff').selectedIndex = 0;
+  selectedPay = 'Карта';
+  document.querySelectorAll('.pay-pill').forEach(function(p){
+    p.classList.remove('pp-active-card','pp-active-cash','pp-active-firm','pp-active-unpaid');
+  });
+  var first = document.querySelector('.pay-pill');
+  if (first) first.classList.add('pp-active-card');
+}
+
+function checkRepeat(val) {
+  var reg = val.trim().toUpperCase();
+  if (!reg || reg.length < 3) {
+    document.getElementById('repeatHint').style.display = 'none';
+    return;
+  }
+  var inBase    = BASE_PLATES.includes(reg);
+  var inJournal = journal.some(function(r){ return r.reg === reg; });
+  var hint = document.getElementById('repeatHint');
+  if (inJournal) {
+    hint.style.display = '';
+    hint.style.color   = '#2ecc71';
+    hint.textContent   = '✅ Бил е при нас днес!';
+  } else if (inBase) {
+    hint.style.display = '';
+    hint.style.color   = '#2ecc71';
+    hint.textContent   = '✅ Познат клиент!';
+  } else {
+    hint.style.display = '';
+    hint.style.color   = '#cc0000';
+    hint.textContent   = '🆕 Нов клиент — ще се запази автоматично';
+  }
+}
+
+function addRow() {
+  if (isWasherRole()) return;
+  var reg     = document.getElementById('fReg').value.trim().toUpperCase() || '—';
+  var brand   = document.getElementById('fBrand').value;
+  var sSel    = document.getElementById('fService');
+  var service = sSel.options[sSel.selectedIndex] ? sSel.options[sSel.selectedIndex].text : '';
+  var staff   = document.getElementById('fStaff').value;
+  var price   = parseFloat(document.getElementById('fPrice').value) || 0;
+  var noVat   = parseFloat(document.getElementById('fPriceNoVat').value) || 0;
+  var notes   = document.getElementById('fNotes').value;
+
+  var row = {
+    id: Date.now(), time: nowTime(),
+    reg: reg, brand: brand, service: service, staff: staff,
+    price: price, priceNoVat: noVat,
+    pay: selectedPay, notes: notes,
+    incomplete: (reg === '—' || price <= 0)
+  };
+
+  journal.push(row);
+  if (reg !== '—' && !registry.includes(reg)) {
+    registry.push(reg);
+    // Запази новия номер в Supabase settings
+    if(currentUser) {
+      var _newPlates2 = registry.filter(function(r){return !BASE_PLATES.includes(r);});
+      pushSettings('registry', _newPlates2);
+      // Добави и в registry таблицата
+      _supa.from('registry').upsert({plate:reg, is_base:false}).then(function(){
+        BASE_PLATES.push(reg);
+      });
+    }
+  }
+  save();
+  if(currentUser) pushRow(row);
+  renderJournal();
+  clearForm();
+  toast(row.incomplete ? '⚠️ Записан непълно — коригирай по-късно' : '✅ Записан: ' + reg);
+}
+
+function deleteRow(id) {
+  if (isWasherRole()) return;
+  journal = journal.filter(function(r) { return r.id !== id; });
+  save();
+  if(currentUser) removeRow(id);
+  renderJournal();
+  toast('🗑️ Изтрит');
+}
+
+var _updateTimers = {};
+function updateField(id, field, val) {
+  if (isWasherRole()) return;
+  var row = journal.find(function(r) { return r.id === id; });
+  if (!row) return;
+  if (field === 'price') {
+    row.price = parseFloat(val) || 0;
+    row.priceNoVat = parseFloat((row.price / 1.2).toFixed(2));
+  } else {
+    row[field] = val;
+  }
+  row.incomplete = (!row.reg || row.reg === '—' || row.price <= 0);
+  if (field === 'reg' && val && val !== '—' && !registry.includes(val.toUpperCase())) {
+    registry.push(val.toUpperCase());
+  }
+  save();
+  // Debounce — изчакай 800ms след последната промяна преди да пращаме
+  if (_updateTimers[id]) clearTimeout(_updateTimers[id]);
+  _updateTimers[id] = setTimeout(function() {
+    if (currentUser) pushRow(row);
+    delete _updateTimers[id];
+  }, 800);
+  updateTotals();
+}
+
+function updateTotals() {
+  var tv=0, tn=0;
+  journal.forEach(function(r) { tv += r.price; tn += r.priceNoVat; });
+  document.getElementById('totVat').textContent   = fmt(tv);
+  document.getElementById('totNoVat').textContent = fmt(tn);
+  var card   = journal.filter(function(r){return r.pay==='Карта';}).reduce(function(s,r){return s+r.price;},0);
+  var cash   = journal.filter(function(r){return r.pay==='В брой';}).reduce(function(s,r){return s+r.price;},0);
+  var firm   = journal.filter(function(r){return r.pay==='Фирма';}).reduce(function(s,r){return s+r.price;},0);
+  var unpaid = journal.filter(function(r){return r.pay==='Неплатена';}).reduce(function(s,r){return s+r.price;},0);
+  document.getElementById('statsGrid').innerHTML =
+    '<div class="stat-box"><div class="stat-val">' + journal.length + '</div><div class="stat-lbl">🚗 Автомобили</div></div>' +
+    '<div class="stat-box green"><div class="stat-val">' + fmtN(tv) + '</div><div class="stat-lbl">💶 Общо (€)</div></div>' +
+    '<div class="stat-box"><div class="stat-val">' + fmtN(card) + '</div><div class="stat-lbl">💳 Карта (€)</div></div>' +
+    '<div class="stat-box gold"><div class="stat-val">' + fmtN(cash) + '</div><div class="stat-lbl">💵 В брой (€)</div></div>' +
+    '<div class="stat-box orange"><div class="stat-val">' + fmtN(firm) + '</div><div class="stat-lbl">🏢 Фирма (€)</div></div>' +
+    '<div class="stat-box red"><div class="stat-val">' + journal.filter(function(r){return r.pay==='Неплатена';}).length + '</div><div class="stat-lbl">❌ Бр. неплатени</div></div>';
+}
+
+function isWasherRole() {
+  if (!currentUser) return false;
+  var r = (currentUser.role || 'admin').toLowerCase();
+  return r === 'миячи' || r === 'moiachi' || r === 'washer';
+}
+
+var WASHER_MAP = {
+  'sasho':  'Сашо',
+  'vasko':  'Васко',
+  'alex':   'Алекс',
+  'bobi':   'Боби',
+  'joro':   'Жори',
+  'kiro':   'Кирил',
+  'marian': 'Мариян',
+  'misho':  'Мишо',
+  'atanas': 'Наско',
+  'niki':   'Ники'
+};
+
+function renderWasherJournal() {
+  var tbody = document.getElementById('washerJournalBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  var tv = 0, tn = 0;
+  // Вземи реалното име на служителя по username
+  var username = currentUser ? currentUser.username.toLowerCase() : '';
+  var staffName = WASHER_MAP[username] || currentUser.username;
+  var myRows = journal.filter(function(r) {
+    return (r.staff || '') === staffName;
+  });
+  myRows.forEach(function(r, i) {
+    tv += r.price; tn += r.priceNoVat;
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="color:var(--muted);font-size:12px;text-align:center">' + (i + 1) + '</td>' +
+      '<td style="color:var(--muted);font-size:12px">' + r.time + '</td>' +
+      '<td style="font-weight:700;color:var(--text)">' + r.reg + '</td>' +
+      '<td style="color:var(--text2);font-size:12px">' + r.brand + '</td>' +
+      '<td style="color:var(--text2);font-size:12px">' + r.service + '</td>' +
+      '<td style="text-align:right;font-weight:700;color:var(--accent)">' + (r.price > 0 ? r.price.toFixed(2) + ' €' : '—') + '</td>' +
+      '<td style="text-align:right;color:var(--muted)">' + (r.priceNoVat > 0 ? r.priceNoVat.toFixed(2) + ' €' : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+  var totVat   = document.getElementById('washerTotVat');
+  var totNoVat = document.getElementById('washerTotNoVat');
+  if (totVat)   totVat.textContent   = tv.toFixed(2) + ' €';
+  if (totNoVat) totNoVat.textContent = tn.toFixed(2) + ' €';
+  // Stats — само за неговите коли
+  var statsEl = document.getElementById('washerStats');
+  if (statsEl) {
+    statsEl.innerHTML =
+      '<div class="washer-stat"><div class="washer-stat-val">' + myRows.length + '</div><div class="washer-stat-lbl">🚗 Мои коли</div></div>' +
+      '<div class="washer-stat green"><div class="washer-stat-val">' + tv.toFixed(2) + '</div><div class="washer-stat-lbl">💶 Оборот с ДДС (€)</div></div>' +
+      '<div class="washer-stat"><div class="washer-stat-val">' + tn.toFixed(2) + '</div><div class="washer-stat-lbl">💵 Оборот без ДДС (€)</div></div>';
+  }
+}
+
+// RENDER JOURNAL
+function renderJournal() {
+  var tbody = document.getElementById('journalBody');
+  tbody.innerHTML = '';
+  var tv=0, tn=0;
+  journal.forEach(function(r, i) {
+    tv += r.price; tn += r.priceNoVat;
+    var isRepeat = journal.filter(function(x){return x.reg===r.reg && x.reg!=='—';}).indexOf(r) > 0;
+    var inc = r.incomplete;
+    var svcOpts = services.map(function(s){ return '<option value="' + s.name + '"' + (r.service===s.name?' selected':'') + '>' + s.name + '</option>'; }).join('');
+    var stOpts  = ['—'].concat(STAFF).map(function(s){ return '<option value="' + s + '"' + ((r.staff||'—')===s?' selected':'') + '>' + (s==='—'?'— без служител —':s) + '</option>'; }).join('');
+    var payOpts = ['Карта','В брой','Фирма','Неплатена'].map(function(p){ return '<option value="' + p + '"' + (r.pay===p?' selected':'') + '>' + p + '</option>'; }).join('');
+    var tr = document.createElement('tr');
+    if (inc) tr.style.background = 'rgba(204,0,0,.07)';
+    tr.innerHTML =
+      '<td class="tbl-num">' + (i+1) + (inc ? ' <span style="color:var(--danger);font-size:10px">⚠</span>' : '') + '</td>' +
+      '<td style="color:var(--muted);font-size:12px">' + r.time + '</td>' +
+      '<td><input value="' + (r.reg==='—'?'':r.reg) + '" placeholder="РВ0000АА" style="text-transform:uppercase;min-width:100px;font-weight:700;color:' + (r.reg==='—'?'var(--danger)':BASE_PLATES.includes(r.reg)||registry.includes(r.reg)?'#2ecc71':'#cc0000') + '" onchange="updateField(' + r.id + ',\'reg\',this.value.toUpperCase()||\'—\')">' + (isRepeat?'<span class="repeat">⭐</span>':'') + '</td>' +
+      '<td style="color:var(--text2);font-size:12px">' + r.brand + '</td>' +
+      '<td><select style="min-width:130px" onchange="updateField(' + r.id + ',\'service\',this.value)">' + svcOpts + '</select></td>' +
+      '<td><select style="min-width:90px" onchange="updateField(' + r.id + ',\'staff\',this.value)">' + stOpts + '</select></td>' +
+      '<td><input type="number" step="0.01" value="' + (r.price||'') + '" placeholder="0.00" style="min-width:75px;font-weight:700;color:' + (r.price<=0?'var(--danger)':'var(--accent)') + '" onchange="updateField(' + r.id + ',\'price\',this.value)"></td>' +
+      '<td style="color:var(--muted);font-size:12px">' + fmtN(r.priceNoVat) + '</td>' +
+      '<td><select style="min-width:90px" onchange="updateField(' + r.id + ',\'pay\',this.value)">' + payOpts + '</select></td>' +
+      '<td><input value="' + (r.notes||'') + '" placeholder="Бележка..." style="min-width:80px;font-size:12px" onchange="updateField(' + r.id + ',\'notes\',this.value)"></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="deleteRow(' + r.id + ')">✕</button></td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('totVat').textContent   = fmt(tv);
+  document.getElementById('totNoVat').textContent = fmt(tn);
+  updateTotals();
+  renderWasherJournal();
+}
+
+// RENDER STAFF
+function renderStaff() {
+  if (isWasherRole()) return;
+  var tbody = document.getElementById('staffBody');
+  tbody.innerHTML = '';
+  var tv=0, tn=0, tc=0;
+  STAFF.forEach(function(name) {
+    var rows = journal.filter(function(r){return r.staff===name;});
+    var vat  = rows.reduce(function(s,r){return s+r.price;},0);
+    var nv   = rows.reduce(function(s,r){return s+r.priceNoVat;},0);
+    tv+=vat; tn+=nv; tc+=rows.length;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>' + name + '</strong></td>' +
+      '<td style="color:var(--accent);font-weight:700;text-align:center">' + fmtN(vat) + '</td>' +
+      '<td style="color:var(--muted);text-align:center">' + fmtN(nv) + '</td>' +
+      '<td style="text-align:center">' + rows.length + '</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('stTotVat').textContent   = fmt(tv);
+  document.getElementById('stTotNoVat').textContent = fmt(tn);
+  document.getElementById('stTotCount').textContent = tc;
+}
+
+// RENDER REPORT
+function calcBonus(name, nv) {
+  if (name === 'Жоро' || name === 'Алекс') {
+    return 25 + nv * 0.20;
+  }
+  return nv * 0.30;
+}
+
+function renderReport() {
+  if (isWasherRole()) return;
+  var tbody = document.getElementById('reportBody');
+  tbody.innerHTML = '';
+  var tv=0,tn=0,tc=0,tb=0;
+  STAFF.forEach(function(name) {
+    var rows  = journal.filter(function(r){return r.staff===name;});
+    var vat   = rows.reduce(function(s,r){return s+r.price;},0);
+    var nv    = rows.reduce(function(s,r){return s+r.priceNoVat;},0);
+    var bonus = calcBonus(name, nv);
+    tv+=vat; tn+=nv; tc+=rows.length; tb+=bonus;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><strong>' + name + '</strong></td>' +
+      '<td style="color:var(--accent);font-weight:700;text-align:center">' + fmtN(vat) + '</td>' +
+      '<td style="color:var(--muted);text-align:center">' + fmtN(nv) + '</td>' +
+      '<td style="text-align:center">' + rows.length + '</td>' +
+      '<td style="color:var(--success);font-weight:700;text-align:center">' + fmtN(bonus) + '</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('rpTotVat').textContent   = fmt(tv);
+  document.getElementById('rpTotNoVat').textContent = fmt(tn);
+  document.getElementById('rpTotCount').textContent = tc;
+  document.getElementById('rpTotBonus').textContent = fmt(tb);
+}
+
+// RENDER FULL
+function renderFull() {
+  if (isWasherRole()) return;
+  renderReport();
+  var card   = journal.filter(function(r){return r.pay==='Карта';}).reduce(function(s,r){return s+r.price;},0);
+  var cash   = journal.filter(function(r){return r.pay==='В брой';}).reduce(function(s,r){return s+r.price;},0);
+  var firm   = journal.filter(function(r){return r.pay==='Фирма';}).reduce(function(s,r){return s+r.price;},0);
+  var unpaid = journal.filter(function(r){return r.pay==='Неплатена';}).reduce(function(s,r){return s+r.price;},0);
+  var total  = journal.reduce(function(s,r){return s+r.price;},0);
+  var cafe   = parseFloat(document.getElementById('cafeIncome').value)||0;
+  document.getElementById('flCard').textContent      = fmtN(card);
+  document.getElementById('flCash').textContent      = fmtN(cash);
+  document.getElementById('flFirm').textContent      = fmtN(firm);
+  document.getElementById('flUnpaid').textContent    = fmtN(unpaid);
+  document.getElementById('flTotal').textContent     = fmtN(total);
+  document.getElementById('flCars').textContent      = journal.length;
+  document.getElementById('flAllUnpaid').textContent = fmtN(firm+unpaid);
+  document.getElementById('flNalichno').textContent  = fmtN(card+cash+cafe);
+  var fm = {};
+  journal.filter(function(r){return r.pay==='Фирма'||r.pay==='Неплатена';}).forEach(function(r){fm[r.brand]=(fm[r.brand]||0)+r.price;});
+  document.getElementById('firmBody').innerHTML = Object.entries(fm).map(function(e){
+    return '<tr><td style="color:var(--warn)">' + e[0] + '</td><td style="text-align:right;font-weight:700;color:var(--warn)">' + fmtN(e[1]) + '</td></tr>';
+  }).join('') || '<tr><td colspan="2" style="color:var(--muted);text-align:center">Няма неплатени</td></tr>';
+}
+
+// RENDER PRICES
+function saveServices() {
+  save();
+  if (currentUser) pushSettings('services', services);
+  initSelects();
+}
+
+function renderPrices() {
+  if (isWasherRole()) return;
+  document.getElementById('pricesBody').innerHTML = services.map(function(s,i){
+    return '<tr>' +
+      '<td><input value="' + s.name + '" onchange="services[' + i + '].name=this.value;saveServices()"></td>' +
+      '<td><input type="number" value="' + s.price + '" style="width:90px" onchange="services[' + i + '].price=parseFloat(this.value)||0;saveServices()"></td>' +
+      '<td><input value="' + (s.desc||'') + '" onchange="services[' + i + '].desc=this.value;saveServices()"></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="services.splice(' + i + ',1);saveServices();renderPrices()">✕</button></td>' +
+      '</tr>';
+  }).join('');
+}
+function addService() {
+  services.push({name:'Νέα услуга',price:0,desc:''});
+  saveServices();
+  renderPrices();
+  toast('✅ Услугата е добавена!');
+}
+
+// RENDER BRANDS
+function saveBrands() {
+  save();
+  if (currentUser) pushSettings('brands', brands);
+  initSelects();
+}
+
+function renderBrands() {
+  if (isWasherRole()) return;
+  document.getElementById('brandsList').innerHTML = brands.map(function(b,i){
+    return '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px">' +
+      '<span style="font-size:13px">' + b + '</span>' +
+      '<span style="cursor:pointer;color:#cc0000;font-weight:700;font-size:12px" onclick="brands.splice(' + i + ',1);saveBrands();renderBrands()">✕</span>' +
+      '</div>';
+  }).join('');
+}
+function addBrand() {
+  var v = document.getElementById('newBrand').value.trim();
+  if (!v) { toast('Въведи марка!',true); return; }
+  if (brands.includes(v)) { toast('Вече съществува!',true); return; }
+  brands.push(v);
+  document.getElementById('newBrand').value = '';
+  saveBrands();
+  renderBrands();
+  toast('✅ Добавена: ' + v);
+}
+
+// SAVE CAFE INCOME
+function saveCafeIncome() {
+  if (isWasherRole()) return;
+  var cafe = parseFloat(document.getElementById('cafeIncome').value) || 0;
+  if (!confirm('☕ Сигурен ли си, че искаш да запазиш ' + cafe.toFixed(2) + ' € за кафене?')) return;
+  localStorage.setItem('rumex_cafe', cafe);
+  if (currentUser) {
+    _supa.from('settings').upsert({key: 'cafe_income', value: cafe});
+  }
+  // Покажи кафене реда в Плащания (винаги видим)
+  var row = document.getElementById('flCafeRow');
+  var val = document.getElementById('flCafeVal');
+  if (row && val) {
+    val.textContent = cafe.toFixed(2);
+    row.style.display = '';
+  }
+  renderFull();
+  toast('✅ Кафене запазено: ' + cafe.toFixed(2) + ' €');
+}
+
+// CLEAR JOURNAL
+function clearJournal() {
+  if (isWasherRole()) return;
+  if (!journal.length) { toast('Журналът е вече празен!', true); return; }
+  if (!confirm('Сигурен ли си?\n\nТова ще изтрие всички ' + journal.length + ' записа от днешния журнал!\n\nПрепоръчително е първо да запазиш в архив.')) return;
+  var today = new Date().toISOString().split('T')[0];
+  journal = [];
+  save();
+  if (currentUser) {
+    _supa.from('journal').delete().eq('date', today).then(function(){
+      toast('🗑️ Журналът е изчистен!');
+    });
+  } else {
+    toast('🗑️ Журналът е изчистен!');
+  }
+  renderJournal();
+}
+
+function updateArchiveCafe(val) {
+  if (!selectedArchDay) return;
+  var y=selectedArchDay.year, m=selectedArchDay.month, d=selectedArchDay.day;
+  var cafe = parseFloat(val) || 0;
+  archive[y][m][d].cafe = cafe;
+  save();
+  if (currentUser) pushArchive(y, m, d, archive[y][m][d]);
+  // Обнови плащанията в прегледа
+  var data = archive[y][m][d];
+  var j = data.journal;
+  var ca = j.filter(function(r){return r.pay==='Карта';}).reduce(function(s,r){return s+r.price;},0);
+  var cs = j.filter(function(r){return r.pay==='В брой';}).reduce(function(s,r){return s+r.price;},0);
+  var fi = j.filter(function(r){return r.pay==='Фирма';}).reduce(function(s,r){return s+r.price;},0);
+  var un = j.filter(function(r){return r.pay==='Неплатена';}).reduce(function(s,r){return s+r.price;},0);
+  document.getElementById('archivePayments').innerHTML =
+    '<table style="width:100%">' +
+    '<tr><td style="color:var(--muted)">💳 Карта (€)</td><td style="text-align:right;font-weight:700">' + ca.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--success)">💵 В брой (€)</td><td style="text-align:right;font-weight:700;color:var(--success)">' + cs.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--warn)">🏢 Фирма (€)</td><td style="text-align:right;font-weight:700;color:var(--warn)">' + fi.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:#cc0000">❌ Неплатени (€)</td><td style="text-align:right;font-weight:700;color:#cc0000">' + un.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--muted)">☕ Кафене (€)</td><td style="text-align:right;font-weight:700">' + cafe.toFixed(2) + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border)"><td style="font-weight:700">💵 Налично (€)</td><td style="text-align:right;font-weight:800;color:var(--gold);font-size:16px">' + (ca+cs+cafe).toFixed(2) + '</td></tr>' +
+    '</table>';
+  toast('✅ Кафене обновено: ' + cafe.toFixed(2) + ' €');
+}
+
+// СТАТИСТИКА
+function getRowsInRange(fromStr, toStr) {
+  var allRows = [];
+  Object.keys(archive).forEach(function(y){
+    Object.keys(archive[y]).forEach(function(m){
+      Object.keys(archive[y][m]).forEach(function(d){
+        var ds = y+'-'+String(parseInt(m)+1).padStart(2,'0')+'-'+String(parseInt(d)).padStart(2,'0');
+        if (ds >= fromStr && ds <= toStr) {
+          var dd = archive[y][m][d];
+          if (dd && dd.journal) allRows = allRows.concat(dd.journal);
+        }
+      });
+    });
+  });
+  var now = new Date();
+  var todayStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  if (todayStr >= fromStr && todayStr <= toStr) allRows = allRows.concat(journal);
+  return allRows;
+}
+
+function setStatsPeriod(period) {
+  var now = new Date();
+  var from, to = now.toISOString().split('T')[0];
+  if (period === 'week') {
+    var d = new Date(now); d.setDate(d.getDate()-6);
+    from = d.toISOString().split('T')[0];
+  } else if (period === 'month') {
+    from = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+  } else if (period === 'year') {
+    from = now.getFullYear() + '-01-01';
+  } else {
+    var earliest = to;
+    Object.keys(archive).forEach(function(y){
+      Object.keys(archive[y]).forEach(function(m){
+        Object.keys(archive[y][m]).forEach(function(d){
+          var ds = y+'-'+String(parseInt(m)+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+          if (ds < earliest) earliest = ds;
+        });
+      });
+    });
+    from = earliest;
+  }
+  document.getElementById('statsDateFrom').value = from;
+  document.getElementById('statsDateTo').value   = to;
+  renderAllStats();
+}
+
+function renderAllStats() {
+  if (isWasherRole()) return;
+  var fromStr = document.getElementById('statsDateFrom').value;
+  var toStr   = document.getElementById('statsDateTo').value;
+  if (!fromStr || !toStr) return;
+  var allRows = getRowsInRange(fromStr, toStr);
+  renderStaffStats(allRows);
+  renderTopWashers(allRows);
+  renderServiceStats(allRows);
+}
+
+// ─── ТОП МИЯЧИ ПО УСЛУГА ───
+function renderTopWashers(allRows) {
+  var content = document.getElementById('topWasherContent');
+  if (!content) return;
+  if (!allRows.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма данни за избрания период.</div>';
+    return;
+  }
+
+  // Вземи всички уникални услуги от записите
+  var svcSet = {};
+  allRows.forEach(function(r){ if (r.service) svcSet[r.service] = true; });
+  var svcNames = Object.keys(svcSet).sort();
+
+  if (!svcNames.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма записи за услуги.</div>';
+    return;
+  }
+
+  var medals     = ['🥇','🥈','🥉'];
+  var medalColor = ['#f0c040','#aab4be','#cd7f32'];
+  var svcColors  = ['#cc0000','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#f1c40f','#e74c3c','#aab4be','#27ae60','#f0c040','#16a085'];
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">';
+
+  svcNames.forEach(function(svc, si) {
+    var sc = svcColors[si % svcColors.length];
+
+    // Изчисли брой на всеки служител за тази услуга
+    var staffCounts = STAFF.map(function(name) {
+      var cnt = allRows.filter(function(r){ return r.staff === name && r.service === svc; }).length;
+      return { name: name, count: cnt };
+    }).filter(function(s){ return s.count > 0; })
+      .sort(function(a, b){ return b.count - a.count; });
+
+    if (!staffCounts.length) return; // пропусни услуги без записи
+
+    var top3 = staffCounts.slice(0, 3);
+    var totalSvc = staffCounts.reduce(function(s,r){ return s + r.count; }, 0);
+
+    var rows = top3.map(function(s, i) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1a1a1a">' +
+        '<div style="font-size:16px;width:24px;text-align:center">' + medals[i] + '</div>' +
+        '<div style="width:26px;height:26px;border-radius:50%;background:' + medalColor[i] + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:11px;flex-shrink:0">' + s.name.charAt(0) + '</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;color:var(--text)">' + s.name + '</div>' +
+        '<div style="font-size:16px;font-weight:800;color:' + medalColor[i] + '">' + s.count + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-left:2px">бр.</div>' +
+      '</div>';
+    }).join('');
+
+    // Ако има по-малко от 3
+    for (var k = top3.length; k < 3; k++) {
+      rows += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1a1a1a;opacity:.3">' +
+        '<div style="font-size:16px;width:24px;text-align:center">' + medals[k] + '</div>' +
+        '<div style="width:26px;height:26px;border-radius:50%;background:#222;flex-shrink:0"></div>' +
+        '<div style="flex:1;font-size:12px;color:#444">—</div>' +
+        '<div style="font-size:14px;color:#444">0</div>' +
+        '<div style="font-size:10px;color:#444;margin-left:2px">бр.</div>' +
+      '</div>';
+    }
+
+    html +=
+      '<div style="background:var(--card);border:1px solid var(--border);border-top:3px solid ' + sc + ';border-radius:4px;padding:14px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+          '<div style="font-size:12px;font-weight:800;color:' + sc + ';letter-spacing:.06em;text-transform:uppercase">' + svc + '</div>' +
+          '<div style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.05);border-radius:20px;padding:2px 8px">' + totalSvc + ' общо</div>' +
+        '</div>' +
+        rows +
+      '</div>';
+  });
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function hexToRgb(hex) {
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+function renderStaffStats(allRows) {
+  var content = document.getElementById('staffStatsContent');
+  if (!content) return;
+  if (!allRows.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма данни за избрания период.</div>';
+    return;
+  }
+  var staffData = STAFF.map(function(name){
+    var rows  = allRows.filter(function(r){ return r.staff===name; });
+    var vat   = rows.reduce(function(s,r){ return s+(parseFloat(r.price)||0); }, 0);
+    var nv    = rows.reduce(function(s,r){ return s+(parseFloat(r.priceNoVat)||parseFloat(r.price_no_vat)||(parseFloat(r.price)||0)/1.2); }, 0);
+    var bonus = calcBonus(name, nv);
+    return {name:name, count:rows.length, vat:vat, nv:nv, bonus:bonus};
+  }).filter(function(s){ return s.count > 0; }).sort(function(a,b){ return b.vat-a.vat; });
+
+  if (!staffData.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма записи за служители.</div>';
+    return;
+  }
+
+  var maxVat = staffData[0].vat || 1;
+  var colors = ['#f0c040','#aab4be','#cd7f32','#cc0000','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#e74c3c'];
+  var medals = ['🥇','🥈','🥉'];
+  var wrap   = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+
+  staffData.forEach(function(s, i) {
+    var col    = colors[i % colors.length];
+    var bar    = Math.round((s.vat/maxVat)*100);
+    var isSpec = (s.name==='Жоро'||s.name==='Алекс');
+    var medal  = medals[i] || ('<span style="color:var(--muted);font-size:13px;font-weight:700;min-width:22px;display:inline-block">' + (i+1) + '.</span>');
+
+    var card   = document.createElement('div');
+    card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:4px;padding:14px;cursor:pointer';
+    card.onclick = (function(name){ return function(){ openStaffStat(name); }; })(s.name);
+
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+          '<div style="font-size:20px;width:28px;text-align:center">' + medal + '</div>' +
+          '<div style="width:34px;height:34px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">'+s.name.charAt(0)+'</div>' +
+          '<div>' +
+            '<div style="font-size:14px;font-weight:700">'+s.name+'</div>' +
+            '<div style="font-size:11px;color:var(--muted)">'+s.count+' услуги · '+(isSpec?'25€+20%':'30%')+'</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:16px;font-weight:800;color:'+col+'">'+s.vat.toFixed(2)+' €</div>' +
+          '<div style="font-size:12px;color:var(--success);font-weight:700">💰 '+s.bonus.toFixed(2)+' €</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sbar"><div class="sbar-fill" style="width:'+bar+'%;background:'+col+'"></div></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">Натисни за детайли ▶</div>';
+
+    wrap.appendChild(card);
+  });
+
+  // Тотал
+  var totVat   = staffData.reduce(function(s,r){return s+r.vat;},0);
+  var totBonus = staffData.reduce(function(s,r){return s+r.bonus;},0);
+  var totCount = staffData.reduce(function(s,r){return s+r.count;},0);
+  var tot = document.createElement('div');
+  tot.style.cssText = 'background:rgba(204,0,0,.08);border:1px solid var(--accent);border-radius:4px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center';
+  tot.innerHTML =
+    '<div style="font-weight:700;color:var(--text)">ОБЩО: '+totCount+' услуги</div>' +
+    '<div style="text-align:right">' +
+      '<div style="font-size:16px;font-weight:800;color:var(--accent)">'+totVat.toFixed(2)+' €</div>' +
+      '<div style="font-size:12px;color:var(--success);font-weight:700">💰 '+totBonus.toFixed(2)+' €</div>' +
+    '</div>';
+  wrap.appendChild(tot);
+
+  content.innerHTML = '';
+  content.appendChild(wrap);
+}
+
+
+// ─── СТАТИСТИКА НА УСЛУГИТЕ ───
+function renderServiceStats(allRows) {
+  var content = document.getElementById('statsContent');
+  if (!content) return;
+  if (!allRows.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма данни за избрания период.</div>';
+    return;
+  }
+  var svcMap={}, revMap={};
+  allRows.forEach(function(r){
+    var s=r.service||'Непосочена';
+    svcMap[s]=(svcMap[s]||0)+1;
+    revMap[s]=(revMap[s]||0)+(parseFloat(r.price)||0);
+  });
+  var sorted   = Object.keys(svcMap).sort(function(a,b){return svcMap[b]-svcMap[a];});
+  var maxCount = svcMap[sorted[0]]||1;
+  var total    = allRows.length;
+  var colors   = ['#cc0000','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e74c3c'];
+  var html = '<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">Общо автомобили: <strong style="color:var(--text)">' + total + '</strong></div>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+  sorted.forEach(function(svc,i){
+    var cnt=svcMap[svc], rev=revMap[svc], pct=Math.round((cnt/total)*100), bar=Math.round((cnt/maxCount)*100), col=colors[i%colors.length];
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:14px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<span style="font-weight:700;font-size:14px">' + svc + '</span>' +
+        '<div style="display:flex;gap:12px;align-items:center">' +
+          '<span style="color:var(--muted);font-size:12px">' + rev.toFixed(2) + ' €</span>' +
+          '<span style="font-size:13px;font-weight:700;color:' + col + '">' + cnt + ' пъти</span>' +
+          '<span style="background:rgba(255,255,255,.06);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted)">' + pct + '%</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sbar"><div class="sbar-fill" style="width:' + bar + '%;background:' + col + '"></div></div>' +
+    '</div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// Запази стара renderStats за съвместимост
+function renderStats() { renderAllStats(); }
+
+// ═══════════════════════════════════════════
+//  УПРАВЛЕНИЕ НА СЛУЖИТЕЛИ
+// ═══════════════════════════════════════════
+var currentStaffStat = null;
+
+function addStaff() {
+  var name = document.getElementById('newStaffName').value.trim();
+  if (!name) { toast('Въведи името на служителя!', true); return; }
+  if (STAFF.includes(name)) { toast('Служителят вече съществува!', true); return; }
+  STAFF.push(name);
+  document.getElementById('newStaffName').value = '';
+  saveStaff();
+  renderStaffMgr();
+  initSelects();
+  toast('✅ Добавен: ' + name);
+}
+
+function removeStaffByEl(el) {
+  removeStaff(el.getAttribute('data-staff'));
+}
+
+function removeStaff(name) {
+  var pass = prompt('🔐 Парола за премахване на ' + name + ':');
+  if (pass === null) return;
+  if (pass !== 'rumex2026') { toast('❌ Грешна парола!', true); return; }
+  if (!confirm('Сигурен ли си, че искаш да премахнеш ' + name + '?\n\nСтатистиките му ще останат в архива.')) return;
+  STAFF = STAFF.filter(function(s){ return s !== name; });
+  saveStaff();
+  renderStaffMgr();
+  initSelects();
+  if (currentStaffStat === name) closeStaffStat();
+  toast('🗑️ ' + name + ' е премахнат');
+}
+
+// WASHER ACCESS TOGGLE
+async function loadWasherAccess() {
+  try {
+    var res = await _supa.from('settings').select('value').eq('key','washer_access').single();
+    var enabled = (!res.error && res.data) ? res.data.value : true;
+    return enabled !== false && enabled !== 'false';
+  } catch(e) { return true; }
+}
+
+async function toggleWasherAccess() {
+  if (isWasherRole()) return;
+  var cur = document.getElementById('washerAccessBtn').getAttribute('data-state') === 'on';
+  var next = !cur;
+  await _supa.from('settings').upsert({key:'washer_access', value: next});
+  updateWasherAccessUI(next);
+  toast(next ? '✅ Достъпът на миячите е активиран' : '🔒 Достъпът на миячите е деактивиран');
+}
+
+function updateWasherAccessUI(enabled) {
+  var btn = document.getElementById('washerAccessBtn');
+  var lbl = document.getElementById('washerAccessLabel');
+  if (!btn) return;
+  btn.setAttribute('data-state', enabled ? 'on' : 'off');
+  if (enabled) {
+    btn.textContent = '🔓 Деактивирай';
+    btn.className = 'btn btn-sm btn-danger';
+    if (lbl) { lbl.textContent = '✅ АКТИВЕН'; lbl.style.color = 'var(--success)'; }
+  } else {
+    btn.textContent = '🔑 Активирай';
+    btn.className = 'btn btn-sm btn-success';
+    if (lbl) { lbl.textContent = '🔒 ДЕАКТИВИРАН'; lbl.style.color = '#cc0000'; }
+  }
+}
+
+function renderMiachiTab() {
+  if (isWasherRole()) return;
+  loadWasherAccess().then(function(enabled) { updateWasherAccessUI(enabled); });
+}
+
+function renderStaffMgr() {
+  if (isWasherRole()) return;
+  var list = document.getElementById('staffList');
+  if (!list) return;
+  list.innerHTML = STAFF.map(function(name) {
+    var avatar = name.charAt(0).toUpperCase();
+    return '<div class="staff-item">' +
+      '<div class="staff-avatar">' + avatar + '</div>' +
+      '<div class="staff-name">' + name + '</div>' +
+      '<div class="staff-actions">' +
+        '<button class="btn btn-danger btn-sm" data-staff="'+name+'" onclick="removeStaffByEl(this)">✕ Премахни</button>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div style="color:var(--muted);text-align:center;padding:20px">Няма добавени служители.</div>';
+}
+
+function openStaffStat(name) {
+  currentStaffStat = name;
+  document.getElementById('staffStatCard').style.display = 'block';
+  document.getElementById('staffStatName').textContent = '📊 ' + name;
+  document.getElementById('staffStatCard').scrollIntoView({behavior:'smooth'});
+  // Вземи текущия период от главните филтри
+  var from = document.getElementById('statsDateFrom').value;
+  var to   = document.getElementById('statsDateTo').value;
+  if (!from || !to) setStatsPeriod('month');
+  else renderStaffStat();
+}
+
+function closeStaffStat() {
+  document.getElementById('staffStatCard').style.display = 'none';
+  currentStaffStat = null;
+}
+
+function setStaffPeriod(period) {
+  var now = new Date();
+  var from, to = now.toISOString().split('T')[0];
+  if (period === 'week') {
+    var d = new Date(now); d.setDate(d.getDate()-6);
+    from = d.toISOString().split('T')[0];
+  } else if (period === 'month') {
+    from = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-01';
+  } else if (period === 'year') {
+    from = now.getFullYear() + '-01-01';
+  } else {
+    var earliest = to;
+    Object.keys(archive).forEach(function(y){
+      Object.keys(archive[y]).forEach(function(m){
+        Object.keys(archive[y][m]).forEach(function(d){
+          var ds = y+'-'+String(parseInt(m)+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+          if (ds < earliest) earliest = ds;
+        });
+      });
+    });
+    from = earliest;
+  }
+  // Ако сме в статистика таб — обнови главните филтри
+  var fEl = document.getElementById('statsDateFrom');
+  var tEl = document.getElementById('statsDateTo');
+  if (fEl) fEl.value = from;
+  if (tEl) tEl.value = to;
+  renderStaffStat();
+}
+
+function renderStaffStat() {
+  if (!currentStaffStat) return;
+  var name    = currentStaffStat;
+  var fromStr = document.getElementById('statsDateFrom').value;
+  var toStr   = document.getElementById('statsDateTo').value;
+  if (!fromStr || !toStr) return;
+
+  var fromDate = new Date(fromStr);
+  var toDate   = new Date(toStr);
+  toDate.setHours(23,59,59);
+
+  // Събери всички записи от архива в диапазона
+  var allRows = [];
+  Object.keys(archive).forEach(function(y){
+    Object.keys(archive[y]).forEach(function(m){
+      Object.keys(archive[y][m]).forEach(function(d){
+        var ds = new Date(parseInt(y), parseInt(m), parseInt(d));
+        if (ds >= fromDate && ds <= toDate) {
+          var dayData = archive[y][m][d];
+          if (dayData && dayData.journal) allRows = allRows.concat(dayData.journal);
+        }
+      });
+    });
+  });
+  // Добави текущия журнал ако today е в диапазона
+  var today = new Date();
+  if (today >= fromDate && today <= toDate) allRows = allRows.concat(journal);
+
+  var rows    = allRows.filter(function(r){ return r.staff === name; });
+  var content = document.getElementById('staffStatContent');
+  var period  = fromStr + ' → ' + toStr;
+
+  if (!rows.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Няма записи за <strong>' + name + '</strong> от ' + period + '</div>';
+    return;
+  }
+
+  var total   = rows.reduce(function(s,r){ return s+(parseFloat(r.price)||0); }, 0);
+  var nv      = rows.reduce(function(s,r){ return s+(parseFloat(r.priceNoVat)||parseFloat(r.price_no_vat)||(parseFloat(r.price)||0)/1.2); }, 0);
+  var bonus   = calcBonus(name, nv);
+  var isSpec  = (name==='Жоро'||name==='Алекс');
+  var formula = isSpec ? '25€ + 20% от ' + nv.toFixed(2) + '€' : '30% от ' + nv.toFixed(2) + '€';
+
+  // Брой дни с работа
+  var daysWorked = new Set(rows.map(function(r){ return r.time ? r.time.split(' ')[0] : 'x'; }));
+
+  var html = '';
+
+  // Период инфо
+  html += '<div style="background:rgba(204,0,0,.06);border:1px solid rgba(204,0,0,.2);border-left:3px solid var(--accent);padding:8px 14px;margin-bottom:16px;font-size:12px;color:var(--muted)">' +
+    'Период: <strong style="color:var(--text)">' + fromStr + ' → ' + toStr + '</strong>' +
+    '&nbsp;|&nbsp; Формула: <strong style="color:var(--text)">' + formula + ' = <span style="color:var(--success)">' + bonus.toFixed(2) + ' €</span></strong>' +
+  '</div>';
+
+  // Статистики
+  html += '<div class="staff-stat-grid">' +
+    '<div class="stat-box"><div class="stat-val">' + rows.length + '</div><div class="stat-lbl">🚗 Услуги</div></div>' +
+    '<div class="stat-box green"><div class="stat-val">' + total.toFixed(2) + '</div><div class="stat-lbl">💶 Оборот с ДДС (€)</div></div>' +
+    '<div class="stat-box"><div class="stat-val">' + nv.toFixed(2) + '</div><div class="stat-lbl">📉 Оборот без ДДС (€)</div></div>' +
+    '<div class="stat-box gold"><div class="stat-val">' + bonus.toFixed(2) + '</div><div class="stat-lbl">💰 Дължимо (€)</div></div>' +
+  '</div>';
+
+  // Оборот по ден — таблица
+  var dayMap = {};
+  var dayRevMap = {};
+  rows.forEach(function(r){
+    // Намери датата от архива
+    var dayKey = 'n/a';
+    // Търсим по стойности в archive
+    outer: for (var y in archive) {
+      for (var m in archive[y]) {
+        for (var d in archive[y][m]) {
+          var dayData = archive[y][m][d];
+          if (dayData && dayData.journal && dayData.journal.some(function(x){ return x.id===r.id; })) {
+            dayKey = y + '-' + String(parseInt(m)+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+            break outer;
+          }
+        }
+      }
+    }
+    dayMap[dayKey]    = (dayMap[dayKey]||0)+1;
+    dayRevMap[dayKey] = (dayRevMap[dayKey]||0)+(parseFloat(r.price)||0);
+  });
+
+  var dayEntries = Object.keys(dayMap).sort().reverse();
+  if (dayEntries.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin:16px 0 10px">ОБОРОТ ПО ДЕН</div>';
+    html += '<div class="tbl-wrap"><table><thead><tr>' +
+      '<th>Дата</th><th style="text-align:center">Услуги</th>' +
+      '<th style="text-align:center">Оборот с ДДС (€)</th>' +
+      '<th style="text-align:center">Оборот без ДДС (€)</th>' +
+      '<th style="text-align:center">Дължимо (€)</th>' +
+    '</tr></thead><tbody>';
+    var grandTot=0, grandNv=0, grandBonus=0;
+    dayEntries.forEach(function(day){
+      var dRev = dayRevMap[day];
+      var dNv  = dRev / 1.2;
+      var dB   = calcBonus(name, dNv);
+      grandTot+=dRev; grandNv+=dNv; grandBonus+=dB;
+      html += '<tr>' +
+        '<td style="font-weight:700">' + day + '</td>' +
+        '<td style="text-align:center">' + dayMap[day] + '</td>' +
+        '<td style="text-align:center;color:var(--accent);font-weight:700">' + dRev.toFixed(2) + '</td>' +
+        '<td style="text-align:center;color:var(--muted)">' + dNv.toFixed(2) + '</td>' +
+        '<td style="text-align:center;color:var(--success);font-weight:700">' + dB.toFixed(2) + '</td>' +
+      '</tr>';
+    });
+    html += '<tr style="background:rgba(204,0,0,.08);font-weight:700">' +
+      '<td>ОБЩО:</td>' +
+      '<td style="text-align:center">' + rows.length + '</td>' +
+      '<td style="text-align:center;color:var(--accent)">' + grandTot.toFixed(2) + '</td>' +
+      '<td style="text-align:center;color:var(--muted)">' + grandNv.toFixed(2) + '</td>' +
+      '<td style="text-align:center;color:var(--success)">' + grandBonus.toFixed(2) + '</td>' +
+    '</tr>';
+    html += '</tbody></table></div>';
+  }
+
+  // Услуги по честота
+  var svcMap = {};
+  rows.forEach(function(r){ var s=r.service||'Непосочена'; svcMap[s]=(svcMap[s]||0)+1; });
+  var sorted = Object.keys(svcMap).sort(function(a,b){ return svcMap[b]-svcMap[a]; });
+  var maxC = svcMap[sorted[0]] || 1;
+  var colors = ['#cc0000','#e67e22','#2ecc71','#3498db','#9b59b6','#1abc9c','#f1c40f'];
+  html += '<div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin:16px 0 10px">УСЛУГИ ПО ЧЕСТОТА</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:8px">';
+  sorted.forEach(function(svc,i){
+    var cnt=svcMap[svc], pct=Math.round((cnt/rows.length)*100), bar=Math.round((cnt/maxC)*100), col=colors[i%colors.length];
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:10px 14px">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+        '<span style="font-size:13px;font-weight:700">' + svc + '</span>' +
+        '<span style="color:' + col + ';font-weight:700">' + cnt + ' пъти · ' + pct + '%</span>' +
+      '</div>' +
+      '<div class="sbar"><div class="sbar-fill" style="width:' + bar + '%;background:' + col + '"></div></div>' +
+    '</div>';
+  });
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+// RENDER REGISTRY
+var regPage = 0;
+var regPageSize = 100;
+
+function renderRegistry() {
+  if (isWasherRole()) return;
+  regPage = 0;
+  renderRegistryPage();
+}
+
+function renderRegistryPage() {
+  if (isWasherRole()) return;
+  var search = (document.getElementById('regSearch').value||'').toUpperCase();
+  var all  = Array.from(new Set(BASE_PLATES.concat(registry).concat(journal.map(function(r){return r.reg;}))));
+  var filt = all.filter(function(r){ return !search || r.includes(search); });
+  filt.sort();
+
+  var start = regPage * regPageSize;
+  var page  = filt.slice(start, start + regPageSize);
+  var total = filt.length;
+  var pages = Math.ceil(total / regPageSize);
+
+  document.getElementById('registryBody').innerHTML = page.map(function(r,i){
+    var visits  = journal.filter(function(x){return x.reg===r;}).length;
+    var isKnown = BASE_PLATES.includes(r);
+    var color   = isKnown ? '#2ecc71' : '#cc0000';
+    var label   = isKnown ? '✅ Познат' : '🆕 Нов';
+    return '<tr>' +
+      '<td class="tbl-num">' + (start+i+1) + '</td>' +
+      '<td><strong style="color:' + color + '">' + r + '</strong></td>' +
+      '<td style="text-align:center;font-size:11px;color:' + color + '">' + label + '</td>' +
+      '<td style="text-align:center">' + (visits>0?'<span style="color:var(--gold);font-weight:700">' + visits + '</span>':'—') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  // Пагинация
+  var pag = document.getElementById('regPagination');
+  if (pag) {
+    pag.innerHTML = total===0 ? '' :
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;color:var(--muted);font-size:12px">' +
+        '<span>Показани ' + (start+1) + '–' + Math.min(start+regPageSize,total) + ' от <strong style="color:var(--text)">' + total + '</strong></span>' +
+        '<div style="display:flex;gap:6px">' +
+          (regPage>0 ? '<button class="btn btn-ghost btn-sm" onclick="regPage--;renderRegistryPage()">◀ Назад</button>' : '') +
+          (start+regPageSize<total ? '<button class="btn btn-primary btn-sm" onclick="regPage++;renderRegistryPage()">Напред ▶</button>' : '') +
+        '</div>' +
+      '</div>';
+  }
+}
+
+// ARCHIVE
+function renderArchive() {
+  if (isWasherRole()) return;
+  var yearSel = document.getElementById('archiveYear');
+  var curYear = new Date().getFullYear();
+  var years   = Array.from(new Set([curYear].concat(Object.keys(archive).map(Number)))).sort(function(a,b){return b-a;});
+  var selYear = parseInt(yearSel.value) || curYear;
+  yearSel.innerHTML = years.map(function(y){return '<option value="' + y + '"' + (y===selYear?' selected':'') + '>' + y + '</option>';}).join('');
+
+  var yearData  = archive[selYear] || {};
+  var container = document.getElementById('monthsList');
+  container.innerHTML = '';
+
+  for (var m=11; m>=0; m--) {
+    var monthData = yearData[m] || {};
+    var days  = Object.keys(monthData).map(Number).sort(function(a,b){return a-b;});
+    var count = days.length;
+    var block = document.createElement('div');
+    block.className = 'month-block';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'month-hdr';
+    var badge = count>0
+      ? '<span style="background:var(--accent);color:#fff;border-radius:3px;padding:2px 8px;font-size:11px">' + count + ' ' + (count===1?'ден':'дни') + '</span>'
+      : '<span style="color:var(--muted);font-size:11px">няма записи</span>';
+    hdr.innerHTML = '<span>📅  ' + MONTHS[m] + '  ' + selYear + '</span><div style="display:flex;align-items:center;gap:10px">' + badge + '<span class="month-arr">▾</span></div>';
+    (function(h, g) {
+      h.onclick = function() { h.classList.toggle('open'); g.classList.toggle('open'); };
+    })(hdr, null);
+
+    block.appendChild(hdr);
+
+    var grid = document.createElement('div');
+    grid.className = 'days-grid';
+    hdr.onclick = (function(h,g){ return function(){ h.classList.toggle('open'); g.classList.toggle('open'); }; })(hdr,grid);
+
+    var daysInMonth = new Date(selYear, m+1, 0).getDate();
+    for (var d=1; d<=daysInMonth; d++) {
+      var btn = document.createElement('div');
+      btn.className = 'day-btn' + (monthData[d] ? ' has-data' : '');
+      btn.textContent = d;
+      if (monthData[d]) {
+        var dot = document.createElement('div');
+        dot.className = 'day-dot';
+        btn.appendChild(dot);
+        btn.title = 'Запазено в ' + (monthData[d].savedAt||'');
+        (function(y,mo,day,b){ b.onclick = function(){ showArchiveDay(y,mo,day,b); }; })(selYear,m,d,btn);
+      }
+      grid.appendChild(btn);
+    }
+
+    if (count > 0) {
+      var tot  = days.reduce(function(s,d){return s+(monthData[d].journal||[]).reduce(function(ss,r){return ss+r.price;},0);},0);
+      var cars = days.reduce(function(s,d){return s+(monthData[d].journal||[]).length;},0);
+      var info = document.createElement('div');
+      info.className = 'month-info';
+      info.innerHTML = 'Общо: <strong style="color:var(--accent)">' + tot.toFixed(2) + ' €</strong> &nbsp;|&nbsp; ' + cars + ' автомобила';
+      block.appendChild(info);
+      if (m===new Date().getMonth() && selYear===curYear) { hdr.classList.add('open'); grid.classList.add('open'); }
+    }
+
+    block.appendChild(grid);
+    container.appendChild(block);
+  }
+}
+
+function showArchiveDay(year, month, day, btn) {
+  document.querySelectorAll('.day-btn.sel').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+  selectedArchDay = {year:year, month:month, day:day};
+  var data = archive[year][month][day];
+  var card = document.getElementById('dayPreviewCard');
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('dayPreviewTitle').textContent = '📋  ' + day + ' ' + MONTHS[month] + ' ' + year + ' — ' + (data.savedAt||'');
+  // Попълни кафене полето
+  var cafeInput = document.getElementById('archiveCafeInput');
+  if (cafeInput) cafeInput.value = (data.cafe||0).toFixed(2);
+  var j   = data.journal;
+  var pct = data.pct || 0.30;
+  var tv  = j.reduce(function(s,r){return s+r.price;},0);
+  var ca  = j.filter(function(r){return r.pay==='Карта';}).reduce(function(s,r){return s+r.price;},0);
+  var cs  = j.filter(function(r){return r.pay==='В брой';}).reduce(function(s,r){return s+r.price;},0);
+  var fi  = j.filter(function(r){return r.pay==='Фирма';}).reduce(function(s,r){return s+r.price;},0);
+  var un  = j.filter(function(r){return r.pay==='Неплатена';}).reduce(function(s,r){return s+r.price;},0);
+  document.getElementById('archiveStats').innerHTML =
+    '<div class="stat-box"><div class="stat-val">' + j.length + '</div><div class="stat-lbl">🚗 Коли</div></div>' +
+    '<div class="stat-box green"><div class="stat-val">' + tv.toFixed(2) + '</div><div class="stat-lbl">💶 Общо (€)</div></div>' +
+    '<div class="stat-box"><div class="stat-val">' + ca.toFixed(2) + '</div><div class="stat-lbl">💳 Карта</div></div>' +
+    '<div class="stat-box gold"><div class="stat-val">' + cs.toFixed(2) + '</div><div class="stat-lbl">💵 В брой</div></div>' +
+    '<div class="stat-box orange"><div class="stat-val">' + fi.toFixed(2) + '</div><div class="stat-lbl">🏢 Фирма</div></div>' +
+    '<div class="stat-box red"><div class="stat-val">' + un.toFixed(2) + '</div><div class="stat-lbl">❌ Неплатени</div></div>';
+  document.getElementById('archiveJournalBody').innerHTML = j.map(function(r,i){
+    return '<tr><td class="tbl-num" style="color:var(--muted)">' + (i+1) + '</td>' +
+      '<td style="color:var(--muted);font-size:12px">' + r.time + '</td>' +
+      '<td><strong>' + r.reg + '</strong></td><td>' + r.brand + '</td>' +
+      '<td style="font-size:12px">' + r.service + '</td>' +
+      '<td>' + (r.staff==='—'?'<span style="color:var(--muted)">—</span>':r.staff) + '</td>' +
+      '<td style="color:var(--accent);font-weight:700">' + r.price.toFixed(2) + '</td>' +
+      '<td>' + payBadge(r.pay) + '</td></tr>';
+  }).join('');
+  document.getElementById('archiveStaffBody').innerHTML = STAFF.map(function(name){
+    var rows = j.filter(function(r){return r.staff===name;});
+    if (!rows.length) return '';
+    var vat = rows.reduce(function(s,r){return s+(parseFloat(r.price)||0);},0);
+    var nv  = rows.reduce(function(s,r){
+      // Ако priceNoVat липсва — изчисли от price
+      var nov = parseFloat(r.priceNoVat) || parseFloat(r.price_no_vat) || (parseFloat(r.price)||0)/1.2;
+      return s + nov;
+    },0);
+    var bonus = calcBonus(name, nv);
+    return '<tr><td><strong>' + name + '</strong></td>' +
+      '<td style="color:var(--accent);font-weight:700;text-align:center">' + vat.toFixed(2) + '</td>' +
+      '<td style="text-align:center">' + rows.length + '</td>' +
+      '<td style="color:var(--success);font-weight:700;text-align:center">' + bonus.toFixed(2) + '</td></tr>';
+  }).join('');
+  document.getElementById('archivePayments').innerHTML =
+    '<table style="width:100%">' +
+    '<tr><td style="color:var(--muted)">💳 Карта (€)</td><td style="text-align:right;font-weight:700">' + ca.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--success)">💵 В брой (€)</td><td style="text-align:right;font-weight:700;color:var(--success)">' + cs.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--warn)">🏢 Фирма (€)</td><td style="text-align:right;font-weight:700;color:var(--warn)">' + fi.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:#cc0000">❌ Неплатени (€)</td><td style="text-align:right;font-weight:700;color:#cc0000">' + un.toFixed(2) + '</td></tr>' +
+    '<tr><td style="color:var(--muted)">☕ Кафене (€)</td><td style="text-align:right;font-weight:700">' + (data.cafe||0).toFixed(2) + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border)"><td style="font-weight:700">💵 Налично (€)</td><td style="text-align:right;font-weight:800;color:var(--gold);font-size:16px">' + (ca+cs+(data.cafe||0)).toFixed(2) + '</td></tr>' +
+    '</table>';
+  var fm = {};
+  j.filter(function(r){return r.pay==='Фирма'||r.pay==='Неплатена';}).forEach(function(r){fm[r.brand]=(fm[r.brand]||0)+r.price;});
+  var fe = Object.entries(fm);
+  document.getElementById('archiveFirms').innerHTML = fe.length
+    ? '<table style="width:100%"><tr><th style="color:var(--muted);font-size:11px">Фирма</th><th style="text-align:right;color:var(--muted);font-size:11px">Сума (€)</th></tr>' +
+      fe.map(function(e){return '<tr><td style="color:var(--warn)">' + e[0] + '</td><td style="text-align:right;font-weight:700;color:var(--warn)">' + e[1].toFixed(2) + '</td></tr>';}).join('') + '</table>'
+    : '<p style="color:var(--muted);font-size:12px">Няма неплатени</p>';
+}
+
+function saveToArchive() {
+  if (isWasherRole()) return;
+  if (!journal.length) { toast('Няма записи!',true); return; }
+  var now=new Date(), y=now.getFullYear(), m=now.getMonth(), d=now.getDate();
+  if (archive[y] && archive[y][m] && archive[y][m][d]) {
+    if (!confirm(d + ' ' + MONTHS[m] + ' ' + y + ' вече е запазен.\nПрезапиши?')) return;
+  }
+  if (!archive[y]) archive[y]={};
+  if (!archive[y][m]) archive[y][m]={};
+  archive[y][m][d] = {
+    journal: JSON.parse(JSON.stringify(journal)),
+    cafe: parseFloat(document.getElementById('cafeIncome').value)||0,
+    pct:  0.30,
+    savedAt: new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})
+  };
+  save();
+  // Запази в Supabase
+  if (currentUser) {
+    pushArchive(y, m, d, archive[y][m][d]);
+  }
+  // OneDrive backup - тихо, без да блокира
+  try { backupToOneDrive(true); } catch(e) {}
+  toast('✅ Запазено — ' + d + ' ' + MONTHS[m] + ' ' + y);
+  renderArchive();
+}
+
+function deleteArchiveDay() {
+  if (!selectedArchDay) { toast('Избери ден!',true); return; }
+  var year=selectedArchDay.year, month=selectedArchDay.month, day=selectedArchDay.day;
+  var pass = prompt('🔐 Парола за изтриване на ' + day + ' ' + MONTHS[month] + ' ' + year + ':');
+  if (pass === null) return;
+  if (pass !== 'rumex2026') { toast('❌ Грешна парола!',true); return; }
+  delete archive[year][month][day];
+  if (Object.keys(archive[year][month]).length===0) delete archive[year][month];
+  if (Object.keys(archive[year]).length===0)        delete archive[year];
+  save();
+  if(currentUser) removeArchive(year,month,day);
+  selectedArchDay = null;
+  document.getElementById('dayPreviewCard').style.display = 'none';
+  document.querySelectorAll('.day-btn.sel').forEach(function(b){b.classList.remove('sel');});
+  renderArchive();
+  toast('🗑️ Изтрит — можеш да запазиш отново');
+}
+
+// BACKUP
+async function backupToOneDrive(silent) {
+  try {
+    var res = await fetch('http://localhost:7788/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:JSON.stringify(archive),journal:JSON.stringify(journal)})});
+    if (!res.ok) throw new Error();
+    if (!silent) toast('☁️ Backup запазен в OneDrive!');
+  } catch(e) {
+    if (!silent) toast('⚠️ Backup неуспешен — пусни сървъра',true);
+  }
+}
+
+async function restoreFromOneDrive() {
+  try {
+    var res = await fetch('http://localhost:7788/restore');
+    if (!res.ok) throw new Error();
+    var r = await res.json();
+    if (!r.data) { toast('☁️ Няма backup в OneDrive',true); return; }
+    if (!confirm('Backup от ' + r.date + '.\nЗареди данните? (текущите ще се заменят)')) return;
+    archive = JSON.parse(r.data);
+    save(); renderArchive();
+    toast('✅ Заредено от OneDrive (' + r.date + ')');
+  } catch(e) { toast('⚠️ Стартирай сървъра първо',true); }
+}
+
+// EXPORT
+async function exportDay() {
+  if (!journal.length) { toast('Няма записи!',true); return; }
+  var pct = 0.30;
+  var today = new Date().toLocaleDateString('bg-BG');
+  var staffData = STAFF.map(function(name){
+    var rows=journal.filter(function(r){return r.staff===name;});
+    var vat=rows.reduce(function(s,r){return s+r.price;},0);
+    var nv =rows.reduce(function(s,r){return s+r.priceNoVat;},0);
+    return {name:name,vat:vat,novat:nv,count:rows.length,bonus:calcBonus(name,nv)};
+  });
+  var payload={today:today,pct:pct,journal:journal,staff:staffData,cafe:parseFloat(document.getElementById('cafeIncome').value)||0};
+  var btn=event.currentTarget; btn.innerHTML='⏳...'; btn.disabled=true;
+  try {
+    var res=await fetch('http://localhost:7788',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var d=await res.json();
+    downloadXlsx(d.xlsx,'Rumex_'+new Date().toLocaleDateString('bg-BG').replace(/\./g,'-')+'.xlsx');
+    toast('✅ Експортирано!');
+  } catch(e) { exportFallback(payload); }
+  finally { btn.innerHTML='📤 Експорт'; btn.disabled=false; }
+}
+
+async function exportArchiveDay() {
+  if (!selectedArchDay) { toast('Избери ден!',true); return; }
+  var y=selectedArchDay.year, m=selectedArchDay.month, d=selectedArchDay.day;
+  var data=archive[y][m][d]; var j=data.journal; var pct=data.pct||0.30;
+  var staffData=STAFF.map(function(name){
+    var rows=j.filter(function(r){return r.staff===name;});
+    var vat=rows.reduce(function(s,r){return s+r.price;},0);
+    var nv =rows.reduce(function(s,r){return s+r.priceNoVat;},0);
+    return {name:name,vat:vat,novat:nv,count:rows.length,bonus:calcBonus(name,nv)};
+  });
+  var payload={today:d+' '+MONTHS[m]+' '+y,pct:pct,journal:j,staff:staffData,cafe:data.cafe||0};
+  var btn=event.currentTarget; btn.innerHTML='⏳...'; btn.disabled=true;
+  try {
+    var res=await fetch('http://localhost:7788',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var r=await res.json();
+    downloadXlsx(r.xlsx,'Rumex_'+y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')+'.xlsx');
+    toast('✅ Експортирано!');
+  } catch(e) { exportFallback(payload); }
+  finally { btn.innerHTML='📤 Експорт'; btn.disabled=false; }
+}
+
+function downloadXlsx(b64,filename) {
+  var binary=atob(b64); var bytes=new Uint8Array(binary.length);
+  for(var i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  var blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  var url=URL.createObjectURL(blob); var a=document.createElement('a');
+  a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportFallback(payload) {
+  var wb=XLSX.utils.book_new();
+  var j=payload.journal; var today=payload.today; var pct=payload.pct; var cafe=payload.cafe;
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(
+    [['РУМЕКС АВТОМИВКА — ДНЕВЕН ЖУРНАЛ',today],[],
+     ['№','ЧАС','РЕГ. №','МАРКА','УСЛУГА','СЛУЖИТЕЛ','€ С ДДС','€ БЕЗ ДДС','ПЛАЩАНЕ','БЕЛЕЖКИ']].concat(
+    j.map(function(r,i){return [i+1,r.time,r.reg,r.brand,r.service,r.staff==='—'?'':r.staff,r.price,parseFloat(r.priceNoVat.toFixed(2)),r.pay,r.notes||''];})).concat(
+    [[],['ОБЩО','','','','','',parseFloat(j.reduce(function(s,r){return s+r.price;},0).toFixed(2))]])
+  ),'Дневен журнал');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(
+    [['РУМЕКС — ОТЧЕТ',today,'Формула: 30% / Жоро и Алекс: 25€ + 20%'],[],
+     ['СЛУЖИТЕЛ','ОБОРОТ С ДДС','ОБОРОТ БЕЗ ДДС','БРОЙ','ВЪЗНАГРАЖДЕНИЕ']].concat(
+    payload.staff.map(function(s){return [s.name,parseFloat(s.vat.toFixed(2)),parseFloat(s.novat.toFixed(2)),s.count,parseFloat(s.bonus.toFixed(2))];})
+  )),'Отчет');
+  var card=j.filter(function(r){return r.pay==='Карта';}).reduce(function(s,r){return s+r.price;},0);
+  var cash=j.filter(function(r){return r.pay==='В брой';}).reduce(function(s,r){return s+r.price;},0);
+  var firm=j.filter(function(r){return r.pay==='Фирма';}).reduce(function(s,r){return s+r.price;},0);
+  var unp =j.filter(function(r){return r.pay==='Неплатена';}).reduce(function(s,r){return s+r.price;},0);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(
+    [['РУМЕКС — ЦЯЛОСТЕН ОТЧЕТ',today],[],
+     ['Карта (€)',parseFloat(card.toFixed(2))],['В брой (€)',parseFloat(cash.toFixed(2))],
+     ['Фирма (€)',parseFloat(firm.toFixed(2))],['Неплатени (€)',parseFloat(unp.toFixed(2))],
+     ['Кафене (€)',cafe],['Налично (€)',parseFloat((card+cash+cafe).toFixed(2))],[],
+     ['Общо приходи (€)',parseFloat((card+cash+firm+unp).toFixed(2))],
+     ['Брой автомобили',j.length],['Общо неплатени (€)',parseFloat((firm+unp).toFixed(2))]]
+  ),'Цялостен отчет');
+  XLSX.writeFile(wb,'Rumex_'+new Date().toLocaleDateString('bg-BG').replace(/\./g,'-')+'.xlsx');
+  toast('⚠️ Базов export — пусни сървъра за пълен дизайн');
+}
+
+
+// ═══════════════════════════════════════════
+//  BACKUP СИСТЕМА
+// ═══════════════════════════════════════════
+var autoBackupInterval = null;
+
+function startAutoBackup() {
+  if (autoBackupInterval) clearInterval(autoBackupInterval);
+  autoBackupInterval = setInterval(function() {
+    createBackup('auto');
+  }, 10 * 60 * 1000); // на всеки 10 мин
+}
+
+async function createBackup(type) {
+  if (!currentUser) return;
+  try {
+    var label = type === 'manual'
+      ? 'Ръчен — ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})
+      : 'Авто — ' + new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'});
+    var res = await _supa.from('backups').insert({
+      journal: journal,
+      archive: archive,
+      label:   label
+    });
+    if (res.error) throw res.error;
+    // Изтрий backups по-стари от 48 часа
+    var cutoff = new Date(Date.now() - 48*60*60*1000).toISOString();
+    await _supa.from('backups').delete().lt('created_at', cutoff);
+    if (type === 'manual') toast('✅ Backup създаден успешно!');
+  } catch(e) {
+    // Тихо игнорирай ако таблицата не съществува
+    if (type === 'manual') toast('⚠️ Backup таблицата не е създадена — изпълни backup_table.sql', true);
+  }
+}
+
+async function createBackupNow() {
+  await createBackup('manual');
+  await loadBackupList();
+}
+
+async function loadBackupList() {
+  var list = document.getElementById('backupList');
+  list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Зареждане...</div>';
+  try {
+    var res = await _supa.from('backups').select('*').order('created_at', {ascending:false}).limit(50);
+    if (res.error || !res.data || !res.data.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Няма намерени backups</div>';
+      return;
+    }
+    list.innerHTML = res.data.map(function(b) {
+      var dt  = new Date(b.created_at);
+      var ago = getTimeAgo(dt);
+      var dateStr = dt.toLocaleDateString('bg-BG') + ' ' + dt.toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'});
+      var isAuto = b.label && b.label.startsWith('Авто');
+      var cars = Array.isArray(b.journal) ? b.journal.length : 0;
+      return '<div class="backup-item">' +
+        '<div>' +
+          '<div class="backup-time">' + dateStr + ' <span class="' + (isAuto?'backup-auto':'backup-manual') + '">' + (isAuto?'Автоматичен':'Ръчен') + '</span></div>' +
+          '<div class="backup-sub">' + ago + ' &nbsp;·&nbsp; ' + cars + ' записа в журнала</div>' +
+        '</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="restoreBackup(' + b.id + ')">↩️ Възстанови</button>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--danger);font-size:13px;text-align:center;padding:20px">Грешка при зареждане</div>';
+  }
+}
+
+function getTimeAgo(dt) {
+  var diff = Math.floor((Date.now() - dt.getTime()) / 60000);
+  if (diff < 1)  return 'Преди малко';
+  if (diff < 60) return 'Преди ' + diff + ' мин';
+  var h = Math.floor(diff/60);
+  if (h < 24)    return 'Преди ' + h + ' ч';
+  return 'Преди ' + Math.floor(h/24) + ' дни';
+}
+
+async function restoreBackup(id) {
+  if (!confirm('Искаш ли да възстановиш данните от този backup?\n\nТекущият журнал ще се замени!')) return;
+  try {
+    var res = await _supa.from('backups').select('*').eq('id',id).single();
+    if (res.error || !res.data) { toast('❌ Backup не е намерен!', true); return; }
+    var b = res.data;
+    // Възстанови журнала
+    journal = Array.isArray(b.journal) ? b.journal : [];
+    archive = b.archive || {};
+    // Изтрий текущия журнал в Supabase и вмъкни новия
+    var today = new Date().toISOString().split('T')[0];
+    await _supa.from('journal').delete().eq('date', today);
+    if (journal.length) {
+      var rows = journal.map(function(r) {
+        return {id:r.id,time:r.time,reg:r.reg,brand:r.brand,service:r.service,
+                staff:r.staff,price:r.price,price_no_vat:r.priceNoVat,
+                pay:r.pay,notes:r.notes||'',incomplete:r.incomplete,date:today};
+      });
+      await _supa.from('journal').upsert(rows);
+    }
+    save();
+    closeBackupPanel();
+    renderJournal();
+    toast('✅ Данните са възстановени от backup!');
+  } catch(e) { toast('❌ Грешка при възстановяване!', true); }
+}
+
+function showBackupPanel() {
+  if (isWasherRole()) return;
+  var p = document.getElementById('backupPanel');
+  p.style.display = 'flex';
+  loadBackupList();
+}
+
+function closeBackupPanel() {
+  document.getElementById('backupPanel').style.display = 'none';
+}
+
+// Затвори с Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeBackupPanel();
+});
+
+// ═══════════════════════════════════════════
+//  ГРАФИК
+// ═══════════════════════════════════════════
+var schedData    = {};
+var schedModal   = {staff:'', date:'', selected:''};
+var DAY_NAMES    = ['Нед','Пон','Вт','Ср','Чет','Пет','Съб'];
+var DAY_FULL     = ['Неделя','Понеделник','Вторник','Сряда','Четвъртък','Петък','Събота'];
+
+// Вградени смени
+var BUILT_IN_SHIFTS = [
+  {label:'8-20',   bg:'#27ae60', fg:'#fff'},
+  {label:'Почива', bg:'#e74c3c', fg:'#fff'},
+  {label:'КАСА',   bg:'#2980b9', fg:'#fff'},
+  {label:'УНИ',    bg:'#8e44ad', fg:'#fff'},
+  {label:'17-20',  bg:'#f39c12', fg:'#000'},
+];
+
+// Palette за нови смени
+var COLOR_PALETTE = [
+  {bg:'#e74c3c',fg:'#fff'},{bg:'#e67e22',fg:'#fff'},{bg:'#f1c40f',fg:'#000'},
+  {bg:'#2ecc71',fg:'#fff'},{bg:'#1abc9c',fg:'#fff'},{bg:'#3498db',fg:'#fff'},
+  {bg:'#9b59b6',fg:'#fff'},{bg:'#e91e63',fg:'#fff'},{bg:'#607d8b',fg:'#fff'},
+  {bg:'#795548',fg:'#fff'},{bg:'#ff5722',fg:'#fff'},{bg:'#009688',fg:'#fff'},
+];
+var selectedColor = COLOR_PALETTE[0];
+
+// Потребителски смени (запазени)
+var customShifts = JSON.parse(localStorage.getItem('rumex_custom_shifts') || '[]');
+
+function saveCustomShifts() {
+  localStorage.setItem('rumex_custom_shifts', JSON.stringify(customShifts));
+  if (currentUser) pushSettings('custom_shifts', customShifts);
+}
+
+function allShifts() { return BUILT_IN_SHIFTS.concat(customShifts); }
+
+function getShiftStyle(label) {
+  var all = allShifts();
+  for (var i=0; i<all.length; i++) {
+    if (all[i].label === label) return all[i];
+  }
+  return {label:label, bg:'#555', fg:'#fff'};
+}
+
+var schedActivePill = ''; // Текущо избрана смяна от лентата
+
+function renderLegend() {
+  var leg = document.getElementById('schedLegend');
+  if (!leg) return;
+  leg.innerHTML = '';
+  allShifts().forEach(function(s, i) {
+    var isBuiltIn = i < BUILT_IN_SHIFTS.length;
+    var isActive  = (schedActivePill === s.label);
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:inline-flex;align-items:center;border-radius:4px;overflow:hidden;border:' + (isActive ? '2px solid #fff' : '2px solid transparent') + ';transition:.15s;cursor:pointer';
+
+    var pill = document.createElement('span');
+    pill.textContent = s.label;
+    pill.style.cssText = 'background:' + s.bg + ';color:' + s.fg + ';padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;user-select:none';
+    pill.title = 'Избери ' + s.label;
+    pill.onclick = (function(label){ return function(){ selectLegendShift(label); }; })(s.label);
+    wrap.appendChild(pill);
+
+    // Х бутон само за custom смени
+    if (!isBuiltIn) {
+      var x = document.createElement('span');
+      x.textContent = '✕';
+      x.style.cssText = 'background:rgba(0,0,0,.35);color:#fff;padding:5px 7px;font-size:10px;cursor:pointer;font-weight:700';
+      x.title = 'Изтрий смяна';
+      x.onclick = (function(idx_){ return function(e){ e.stopPropagation(); removeCustomShiftByLabel(idx_); }; })(s.label);
+      wrap.appendChild(x);
+    }
+
+    leg.appendChild(wrap);
+  });
+
+  // Обнови подсказката
+  var hint = document.getElementById('schedSelectedHint');
+  var nm   = document.getElementById('schedSelectedName');
+  if (hint && nm) {
+    if (schedActivePill) {
+      hint.style.display = '';
+      nm.textContent = schedActivePill;
+    } else {
+      hint.style.display = 'none';
+    }
+  }
+}
+
+function selectLegendShift(label) {
+  schedActivePill = (schedActivePill === label) ? '' : label; // toggle
+  renderLegend();
+}
+
+function removeCustomShiftByLabel(label) {
+  var idx = customShifts.findIndex(function(s){ return s.label === label; });
+  if (idx < 0) return;
+  if (!confirm('Изтрий смяна "' + label + '"?')) return;
+  customShifts.splice(idx, 1);
+  saveCustomShifts();
+  if (schedActivePill === label) schedActivePill = '';
+  renderLegend();
+}
+
+function openAddShiftModal() {
+  var cp = document.getElementById('addShiftColorPicker');
+  cp.innerHTML = '';
+  selectedColor = COLOR_PALETTE[0];
+  COLOR_PALETTE.forEach(function(col, i){
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:28px;height:28px;border-radius:4px;background:' + col.bg + ';cursor:pointer;border:3px solid ' + (i===0?'#fff':'transparent') + ';transition:.15s';
+    dot.onclick = (function(c){ return function(){ selectedColor=c; document.querySelectorAll('#addShiftColorPicker div').forEach(function(d){ d.style.border='3px solid transparent'; }); this.style.border='3px solid #fff'; }; })(col);
+    cp.appendChild(dot);
+  });
+  document.getElementById('addShiftText').value = '';
+  document.getElementById('addShiftModal').style.display = 'flex';
+}
+
+function confirmAddShift() {
+  var text = document.getElementById('addShiftText').value.trim();
+  if (!text) { toast('Въведи текст за смяната!', true); return; }
+  var exists = allShifts().some(function(s){ return s.label === text; });
+  if (exists) { toast('Тази смяна вече съществува!', true); return; }
+  customShifts.push({label:text, bg:selectedColor.bg, fg:selectedColor.fg});
+  saveCustomShifts();
+  schedActivePill = text;
+  document.getElementById('addShiftModal').style.display = 'none';
+  renderLegend();
+  toast('✅ Добавена смяна: ' + text);
+}
+
+function dateStr(d) { return d.toISOString().split('T')[0]; }
+function addDays(d,n) { var r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function getWeekStart(d) {
+  var day = d.getDay(); // 0=нед, 1=пон...6=съб
+  var diff = (day === 0) ? -6 : 1 - day; // винаги до понеделник
+  return addDays(d, diff);
+}
+
+function setSchedPeriod(p) {
+  var today = new Date(), from, to;
+  if (p === 'week') {
+    from = getWeekStart(today);         // Понеделник
+    to   = addDays(from, 6);            // Неделя
+  } else if (p === 'next') {
+    from = addDays(getWeekStart(today), 7);
+    to   = addDays(from, 6);
+  } else if (p === 'prev') {
+    from = addDays(getWeekStart(today), -7);
+    to   = addDays(from, 6);
+  }
+  document.getElementById('schedFrom').value = dateStr(from);
+  document.getElementById('schedTo').value   = dateStr(to);
+  renderSchedule();
+  loadSchedule();
+}
+
+async function initSchedule() {
+  setSchedPeriod('week');
+  renderLegend();
+}
+
+async function loadSchedule() {
+  if (!currentUser) return;
+  try {
+    var from=document.getElementById('schedFrom').value;
+    var to=document.getElementById('schedTo').value;
+    if (!from||!to) return;
+    var res = await _supa.from('schedule').select('*').gte('work_date',from).lte('work_date',to);
+    if (!res.error && res.data) {
+      res.data.forEach(function(r){
+        if (!schedData[r.staff_name]) schedData[r.staff_name]={};
+        schedData[r.staff_name][r.work_date]=r.shift;
+      });
+      renderSchedule();
+    }
+  } catch(e) {}
+}
+
+function renderSchedule() {
+  var fromStr=document.getElementById('schedFrom').value;
+  var toStr=document.getElementById('schedTo').value;
+  if (!fromStr||!toStr) return;
+  var from=new Date(fromStr), to=new Date(toStr), today=dateStr(new Date());
+
+  // Генерирай дните сортирани Пон→Нед
+  var days=[], cur=new Date(from);
+  while (cur<=to) { days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+  // Сортирай: 0(нед)→7 за да е последен
+  days.sort(function(a,b){
+    var da = a.getDay()===0 ? 7 : a.getDay();
+    var db = b.getDay()===0 ? 7 : b.getDay();
+    return da - db;
+  });
+
+  var thead=document.getElementById('schedHead');
+  thead.innerHTML='<tr><th class="staff-col">Служител</th>'+
+    days.map(function(d){
+      var ds=dateStr(d), isT=ds===today;
+      return '<th class="'+(isT?'day-today':'')+'">' +
+        '<div class="day-header">'+DAY_FULL[d.getDay()]+'</div>' +
+        '<div class="day-date">'+d.getDate()+'.'+(d.getMonth()+1)+'</div></th>';
+    }).join('')+'</tr>';
+
+  var tbody=document.getElementById('schedBody');
+  tbody.innerHTML=STAFF.map(function(name){
+    var cells=days.map(function(d){
+      var ds=dateStr(d);
+      var shift=(schedData[name]&&schedData[name][ds])||'';
+      var style=getShiftStyle(shift);
+      var bg=shift?style.bg:'var(--bg)';
+      var fg=shift?style.fg:'#333';
+      var lbl=shift||'—';
+      var _n=name, _d=ds;
+      return '<td><div class="sched-cell" style="background:'+bg+';color:'+fg+'" data-n="'+_n+'" data-d="'+_d+'" onclick="openSchedModalByEl(this)">'+lbl+'</div></td>'
+    }).join('');
+    return '<tr><td class="staff-name-cell">'+name+'</td>'+cells+'</tr>';
+  }).join('');
+}
+
+function openSchedModalByEl(el) {
+  var staff    = el.getAttribute('data-n');
+  var date     = el.getAttribute('data-d');
+  var existing = (schedData[staff] && schedData[staff][date]) || '';
+
+  if (schedActivePill && !existing) {
+    // Празна клетка + активна смяна → директно запиши
+    schedModal = {staff: staff, date: date, selected: schedActivePill};
+    saveSchedCell();
+  } else {
+    // Попълнена клетка (или няма активна смяна) → отвори модал за промяна/премахване
+    openSchedModal(staff, date);
+  }
+}
+
+function openSchedModal(staff, date) {
+  var existing = (schedData[staff] && schedData[staff][date]) || '';
+  schedModal = {staff: staff, date: date, selected: schedActivePill || existing};
+  var d = new Date(date);
+  document.getElementById('schedModalTitle').textContent = staff + ' — ' + DAY_FULL[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth()+1);
+
+  // Покажи текущата смяна
+  var cur = document.getElementById('schedModalCurrent');
+  if (cur) {
+    if (existing) {
+      var st = getShiftStyle(existing);
+      cur.innerHTML = 'Текуща смяна: <span style="background:' + st.bg + ';color:' + st.fg + ';padding:2px 10px;border-radius:3px;font-weight:700;font-size:12px">' + existing + '</span>';
+    } else {
+      cur.textContent = 'Няма зададена смяна';
+    }
+  }
+
+  renderShiftBtns();
+  document.getElementById('schedModal').style.display = 'flex';
+}
+
+function renderShiftBtns() {
+  var cur  = schedModal.selected;
+  var btns = document.getElementById('schedShiftBtns');
+  if (!btns) return;
+  btns.innerHTML = '';
+  allShifts().forEach(function(s) {
+    var isSel = (cur === s.label);
+    var btn   = document.createElement('button');
+    btn.textContent = s.label;
+    btn.style.cssText = 'padding:7px 14px;border-radius:4px;border:' +
+      (isSel ? '3px solid #fff' : '2px solid transparent') +
+      ';background:' + s.bg + ';color:' + s.fg +
+      ';font-weight:700;font-size:13px;cursor:pointer;transition:.15s';
+    btn.onclick = (function(label){ return function(){
+      schedModal.selected = label;
+      saveSchedCell();
+    }; })(s.label);
+    btns.appendChild(btn);
+  });
+}
+
+function selectShift(label, el) {
+  schedModal.selected = label;
+  // Обнови визуално
+  document.querySelectorAll('#schedShiftBtns button').forEach(function(b){
+    if (b.textContent===label) b.style.border='3px solid #fff';
+    else if (!b.textContent.startsWith('✕')) b.style.border='2px solid transparent';
+  });
+}
+
+function selectColor(idx, el) {
+  selectedColor=COLOR_PALETTE[idx];
+  document.querySelectorAll('#schedColorPicker div').forEach(function(d){ d.style.border='3px solid transparent'; });
+  el.style.border='3px solid #fff';
+}
+
+function addCustomShift() {
+  var text=document.getElementById('schedCustomText').value.trim();
+  if (!text) { toast('Въведи текст за смяната!',true); return; }
+  // Провери дали вече съществува
+  var exists=allShifts().some(function(s){ return s.label===text; });
+  if (exists) {
+    // Ако съществува — просто го избери и запази
+    schedModal.selected=text;
+    renderShiftBtns();
+    saveSchedCell();
+    return;
+  }
+  var newShift={label:text, bg:selectedColor.bg, fg:selectedColor.fg};
+  customShifts.push(newShift);
+  saveCustomShifts();
+  schedModal.selected=text;
+  renderLegend();
+  renderShiftBtns();
+  document.getElementById('schedCustomText').value='';
+  // Автоматично запази смяната в графика
+  saveSchedCell();
+}
+
+function removeCustomShift(idx) {
+  if (!confirm('Премахни смяната "'+customShifts[idx].label+'"?')) return;
+  customShifts.splice(idx,1);
+  saveCustomShifts();
+  renderLegend();
+  renderShiftBtns();
+}
+
+function closeSchedModal() {
+  document.getElementById('schedModal').style.display='none';
+}
+
+function clearSchedCell() {
+  var name=schedModal.staff, date=schedModal.date;
+  if (schedData[name]) delete schedData[name][date];
+  closeSchedModal();
+  renderSchedule();
+  if (currentUser) {
+    _supa.from('schedule').delete().eq('staff_name',name).eq('work_date',date);
+  }
+}
+
+async function saveSchedCell() {
+  var shift=schedModal.selected;
+  if (!shift) { toast('Избери смяна!',true); return; }
+  var name=schedModal.staff, date=schedModal.date;
+  if (!schedData[name]) schedData[name]={};
+  schedData[name][date]=shift;
+  closeSchedModal();
+  renderSchedule();
+  if (currentUser) {
+    try {
+      await _supa.from('schedule').upsert({staff_name:name,work_date:date,shift:shift,updated_at:new Date().toISOString()},{onConflict:'staff_name,work_date'});
+      toast('✅ '+name+' → '+shift);
+    } catch(e) { toast('⚠️ Грешка при запазване',true); }
+  }
+}
+
+function exportSchedule() {
+  var fromStr=document.getElementById('schedFrom').value;
+  var toStr=document.getElementById('schedTo').value;
+  if (!fromStr) { toast('Избери период!',true); return; }
+  var from=new Date(fromStr), to=new Date(toStr);
+  var days=[], cur=new Date(from);
+  while (cur<=to) { days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+  var wb=XLSX.utils.book_new();
+  var hdr=['Служител'].concat(days.map(function(d){ return DAY_FULL[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1); }));
+  var rows=[hdr];
+  STAFF.forEach(function(name){
+    var row=[name];
+    days.forEach(function(d){ var ds=dateStr(d); row.push((schedData[name]&&schedData[name][ds])||'—'); });
+    rows.push(row);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,ws,'График');
+  XLSX.writeFile(wb,'Rumex_grafik_'+fromStr+'.xlsx');
+  toast('✅ Графикът е експортиран!');
+}
+
+function toggleFirmCard() {
+  var body = document.getElementById('firmCardBody');
+  var icon = document.getElementById('firmToggleIcon');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  icon.textContent = open ? '▸' : '▾';
+}
+
+function toggleReportCard() {
+  var body = document.getElementById('reportCardBody');
+  var icon = document.getElementById('reportToggleIcon');
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  icon.textContent = open ? '▸' : '▾';
+}
+
+// INIT
+if (isWasherRole()) {
+  renderWasherJournal();
+  if (currentUser) { loadFromSupabase(); startSync(); }
+} else {
+  initSelects();
+  renderJournal();
+  if (currentUser) { loadFromSupabase(); startSync(); startAutoBackup(); }
+}
+</script>
+</body>
+</html>
