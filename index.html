@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RUMEX Автомивка v3.8</title>
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<script>(function(){var v='33';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<script>(function(){var v='34';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1210,6 +1210,15 @@ function switchTab(id, el) {
 }
 
 // HELPERS
+// Нормализация на номер: латинските двойници (ABEKMHOPCTYX) се превръщат в кирилски,
+// за да се разпознава номерът независимо с коя азбука е написан
+var _LAT='ABEKMHOPCTYX', _CYR='АВЕКМНОРСТУХ';
+function normPlate(p) {
+  p = (p||'').trim().toUpperCase();
+  var out='';
+  for (var i=0;i<p.length;i++) { var ix=_LAT.indexOf(p[i]); out += ix>=0 ? _CYR[ix] : p[i]; }
+  return out;
+}
 function fmt(n)  { return (parseFloat(n)||0).toFixed(2) + ' €'; }
 function fmtN(n) { return (parseFloat(n)||0).toFixed(2); }
 function nowTime() { return new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'}); }
@@ -1268,7 +1277,7 @@ function clearForm() {
 }
 
 function checkRepeat(val) {
-  var reg = val.trim().toUpperCase();
+  var reg = normPlate(val);
   if (!reg || reg.length < 3) {
     document.getElementById('repeatHint').style.display = 'none';
     return;
@@ -1292,7 +1301,7 @@ function checkRepeat(val) {
 }
 
 function addRow() {
-  var reg     = document.getElementById('fReg').value.trim().toUpperCase() || '—';
+  var reg     = normPlate(document.getElementById('fReg').value) || '—';
   var brand   = document.getElementById('fBrand').value;
   var sSel    = document.getElementById('fService');
   var service = sSel.options[sSel.selectedIndex] ? sSel.options[sSel.selectedIndex].text : '';
@@ -1311,10 +1320,11 @@ function addRow() {
   };
 
   journal.push(row);
-  if (reg !== '—' && !registry.includes(reg)) {
-    registry.push(reg);
-    // Запази новия номер в Supabase settings
-    if(currentUser) {
+  if (reg !== '—') {
+    if (!registry.includes(reg)) registry.push(reg);
+    // Запази новия номер в Supabase — проверката е срещу базата (BASE_PLATES),
+    // а не срещу локалния списък, иначе номер от localStorage никога не стига до базата
+    if(currentUser && !BASE_PLATES.includes(reg)) {
       var _newPlates2 = registry.filter(function(r){return !BASE_PLATES.includes(r);});
       pushSettings('registry', _newPlates2);
       // Добави и в registry таблицата
@@ -1345,12 +1355,24 @@ function updateField(id, field, val) {
   if (field === 'price') {
     row.price = parseFloat(val) || 0;
     row.priceNoVat = parseFloat((row.price / 1.2).toFixed(2));
+  } else if (field === 'reg') {
+    row.reg = normPlate(val) || '—';
   } else {
     row[field] = val;
   }
   row.incomplete = (!row.reg || row.reg === '—' || row.price <= 0);
-  if (field === 'reg' && val && val !== '—' && !registry.includes(val.toUpperCase())) {
-    registry.push(val.toUpperCase());
+  if (field === 'reg' && row.reg !== '—') {
+    var _p = row.reg;
+    if (!registry.includes(_p)) registry.push(_p);
+    // Синхронизирай към Supabase (както в addRow) — преди това номерът,
+    // дописан в журнала, оставаше само в localStorage на това устройство
+    if (currentUser && !BASE_PLATES.includes(_p)) {
+      var _newPlatesU = registry.filter(function(r){return !BASE_PLATES.includes(r);});
+      pushSettings('registry', _newPlatesU);
+      _supa.from('registry').upsert({plate:_p, is_base:false}).then(function(){
+        BASE_PLATES.push(_p);
+      });
+    }
   }
   save();
   // Debounce — изчакай 800ms след последната промяна преди да пращаме
