@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RUMEX Автомивка v3.8</title>
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<script>(function(){var v='36';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<script>(function(){var v='37';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -37,9 +37,10 @@ header{background:#000;border-bottom:3px solid var(--accent);padding:0 16px;disp
 .card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:16px}
 .card-title{font-size:12px;font-weight:800;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;letter-spacing:.12em;text-transform:uppercase;border-left:3px solid var(--accent);padding-left:10px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-.stat-box{background:var(--surface);border:1px solid #222;border-radius:4px;padding:16px;text-align:center;border-top:3px solid var(--accent)}
+.stat-box{background:linear-gradient(180deg,#181818,#111);border:1px solid #222;border-radius:10px;padding:16px;text-align:center;border-top:3px solid var(--accent);transition:.18s}
+.stat-box:hover{transform:translateY(-2px);border-color:#333;box-shadow:0 6px 16px rgba(0,0,0,.4)}
 .stat-box.green{border-top-color:var(--success)}.stat-box.gold{border-top-color:var(--text)}.stat-box.orange{border-top-color:var(--warn)}.stat-box.red{border-top-color:var(--danger)}
-.stat-val{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.stat-val{font-size:25px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.02em}
 .stat-lbl{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
 .form-group{display:flex;flex-direction:column;gap:5px}
@@ -103,8 +104,18 @@ td input:focus,td select:focus{background:var(--card);border:1px solid var(--acc
 .staff-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .staff-actions{margin-left:auto;display:flex;gap:8px}
 .staff-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
-.sbar{background:#1a1a1a;border-radius:3px;height:8px;overflow:hidden;margin-top:6px}
-.sbar-fill{height:100%;border-radius:3px;transition:width .4s}
+.sbar{background:#101010;border-radius:6px;height:10px;overflow:hidden;margin-top:6px;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.sbar-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+input[type="date"]{cursor:pointer}
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;filter:invert(.75);opacity:.85}
+.stat-card{background:linear-gradient(180deg,#1c1c1c,#141414);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.18s}
+.stat-card:hover{transform:translateY(-2px);border-color:#3a3a3a;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+.stat-card.rank1{border-color:rgba(240,192,64,.45);box-shadow:0 0 18px rgba(240,192,64,.08)}
+.svc-card{background:linear-gradient(180deg,#1a1a1a,#131313);border:1px solid var(--border);border-radius:10px;padding:14px;transition:.18s}
+.svc-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+.stat-avatar{display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.5),inset 0 -2px 4px rgba(0,0,0,.3)}
 
 
 /* SCHEDULE */
@@ -2136,7 +2147,7 @@ function renderTopWashers(allRows, content) {
     }
 
     html +=
-      '<div style="background:var(--card);border:1px solid var(--border);border-top:3px solid ' + sc + ';border-radius:4px;padding:14px">' +
+      '<div class="svc-card" style="border-top:3px solid ' + sc + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
           '<div style="font-size:12px;font-weight:800;color:' + sc + ';letter-spacing:.06em;text-transform:uppercase">' + svc + '</div>' +
           '<div style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.05);border-radius:20px;padding:2px 8px">' + totalSvc + ' общо</div>' +
@@ -2184,30 +2195,29 @@ function renderStaffStats(allRows, content) {
   staffData.forEach(function(s, i) {
     var col    = colors[i % colors.length];
     var bar    = Math.round((s.vat/maxVat)*100);
-    var isSpec = (s.name==='Жоро'||s.name==='Алекс');
     var medal  = medals[i] || ('<span style="color:var(--muted);font-size:13px;font-weight:700;min-width:22px;display:inline-block">' + (i+1) + '.</span>');
 
     var card   = document.createElement('div');
-    card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:4px;padding:14px;cursor:pointer';
+    card.className = 'stat-card' + (i===0 ? ' rank1' : '');
     card.onclick = (function(name){ return function(){ openStaffStat(name); }; })(s.name);
 
     card.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
-        '<div style="display:flex;align-items:center;gap:10px">' +
-          '<div style="font-size:20px;width:28px;text-align:center">' + medal + '</div>' +
-          '<div style="width:34px;height:34px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">'+s.name.charAt(0)+'</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          '<div style="font-size:22px;width:30px;text-align:center">' + medal + '</div>' +
+          '<div class="stat-avatar" style="width:38px;height:38px;font-size:15px;background:radial-gradient(circle at 30% 30%,'+col+','+col+'99)">'+s.name.charAt(0)+'</div>' +
           '<div>' +
-            '<div style="font-size:14px;font-weight:700">'+s.name+'</div>' +
-            '<div style="font-size:11px;color:var(--muted)">'+s.count+' услуги · '+(isSpec?'25€+20%':'30%')+'</div>' +
+            '<div style="font-size:15px;font-weight:800;letter-spacing:.02em">'+s.name+'</div>' +
+            '<div style="font-size:11px;color:var(--muted)">'+s.count+' услуги · <span style="color:var(--text2)">'+payConfigLabel(s.name)+'</span></div>' +
           '</div>' +
         '</div>' +
         '<div style="text-align:right">' +
-          '<div style="font-size:16px;font-weight:800;color:'+col+'">'+s.vat.toFixed(2)+' €</div>' +
+          '<div style="font-size:18px;font-weight:800;color:'+col+';letter-spacing:-.02em">'+s.vat.toFixed(2)+' €</div>' +
           '<div style="font-size:12px;color:var(--success);font-weight:700">💰 '+s.bonus.toFixed(2)+' €</div>' +
         '</div>' +
       '</div>' +
-      '<div class="sbar"><div class="sbar-fill" style="width:'+bar+'%;background:'+col+'"></div></div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right">Натисни за детайли ▶</div>';
+      '<div class="sbar"><div class="sbar-fill" style="width:'+bar+'%;background:linear-gradient(90deg,'+col+'77,'+col+')"></div></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:right;opacity:.7">Натисни за детайли ▶</div>';
 
     wrap.appendChild(card);
   });
@@ -2217,7 +2227,7 @@ function renderStaffStats(allRows, content) {
   var totBonus = staffData.reduce(function(s,r){return s+r.bonus;},0);
   var totCount = staffData.reduce(function(s,r){return s+r.count;},0);
   var tot = document.createElement('div');
-  tot.style.cssText = 'background:rgba(204,0,0,.08);border:1px solid var(--accent);border-radius:4px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center';
+  tot.style.cssText = 'background:linear-gradient(90deg,rgba(204,0,0,.16),rgba(204,0,0,.04));border:1px solid var(--accent);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 14px rgba(204,0,0,.12)';
   tot.innerHTML =
     '<div style="font-weight:700;color:var(--text)">ОБЩО: '+totCount+' услуги</div>' +
     '<div style="text-align:right">' +
@@ -2440,7 +2450,7 @@ function renderServiceStats(allRows, content) {
   html += '<div style="display:flex;flex-direction:column;gap:10px">';
   sorted.forEach(function(svc,i){
     var cnt=svcMap[svc], rev=revMap[svc], pct=Math.round((cnt/total)*100), bar=Math.round((cnt/maxCount)*100), col=colors[i%colors.length];
-    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:14px">' +
+    html += '<div class="svc-card">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
         '<span style="font-weight:700;font-size:14px">' + svc + '</span>' +
         '<div style="display:flex;gap:12px;align-items:center">' +
@@ -3781,6 +3791,14 @@ function toggleReportCard() {
   body.style.display = open ? 'none' : '';
   icon.textContent = open ? '▸' : '▾';
 }
+
+// Клик където и да е върху поле за дата отваря календара (както на мобилно)
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if (t && t.tagName === 'INPUT' && t.type === 'date' && typeof t.showPicker === 'function') {
+    try { t.showPicker(); } catch(err) {}
+  }
+});
 
 // INIT
 initSelects();
