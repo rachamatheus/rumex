@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RUMEX Автомивка v3.8</title>
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<script>(function(){var v='37';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<script>(function(){var v='38';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1475,7 +1475,9 @@ function renderJournal() {
     var isRepeat = journal.filter(function(x){return x.reg===r.reg && x.reg!=='—';}).indexOf(r) > 0;
     var inc = r.incomplete;
     var svcOpts = services.map(function(s){ return '<option value="' + s.name + '"' + (r.service===s.name?' selected':'') + '>' + s.name + '</option>'; }).join('');
-    var stOpts  = ['—'].concat(STAFF).map(function(s){ return '<option value="' + s + '"' + ((r.staff||'—')===s?' selected':'') + '>' + (s==='—'?'— без служител —':s) + '</option>'; }).join('');
+    var _stList = ['—'].concat(STAFF);
+    if (r.staff && r.staff !== '—' && _stList.indexOf(r.staff) === -1) _stList.push(r.staff);
+    var stOpts  = _stList.map(function(s){ return '<option value="' + s + '"' + ((r.staff||'—')===s?' selected':'') + '>' + (s==='—'?'— без служител —':s) + '</option>'; }).join('');
     var payOpts = ['Карта','В брой','Фирма','Неплатена'].map(function(p){ return '<option value="' + p + '"' + (r.pay===p?' selected':'') + '>' + p + '</option>'; }).join('');
     var tr = document.createElement('tr');
     if (inc) tr.style.background = 'rgba(204,0,0,.07)';
@@ -1503,7 +1505,7 @@ function renderStaff() {
   var tbody = document.getElementById('staffBody');
   tbody.innerHTML = '';
   var tv=0, tn=0, tc=0;
-  STAFF.forEach(function(name) {
+  staffFromRows(journal).forEach(function(name) {
     var rows = journal.filter(function(r){return r.staff===name;});
     var vat  = rows.reduce(function(s,r){return s+r.price;},0);
     var nv   = rows.reduce(function(s,r){return s+r.priceNoVat;},0);
@@ -1573,12 +1575,23 @@ function calcBonusRows(name, rows) {
   Object.keys(byDate).forEach(function(d){ total += calcBonus(name, byDate[d], d); });
   return total;
 }
+// Служители за статистики: текущите + всички имена от записите (вкл. напуснали),
+// за да се вижда историята и възнаграждението на бивши служители
+function staffFromRows(rows) {
+  var names = STAFF.slice();
+  rows.forEach(function(r){
+    var n = r.staff;
+    if (n && n !== '—' && names.indexOf(n) === -1) names.push(n);
+  });
+  return names;
+}
+function isFormerStaff(name) { return STAFF.indexOf(name) === -1; }
 
 function renderReport() {
   var tbody = document.getElementById('reportBody');
   tbody.innerHTML = '';
   var tv=0,tn=0,tc=0,tb=0;
-  STAFF.forEach(function(name) {
+  staffFromRows(journal).forEach(function(name) {
     var rows  = journal.filter(function(r){return r.staff===name;});
     var vat   = rows.reduce(function(s,r){return s+r.price;},0);
     var nv    = rows.reduce(function(s,r){return s+r.priceNoVat;},0);
@@ -2114,7 +2127,7 @@ function renderTopWashers(allRows, content) {
     var sc = svcColors[si % svcColors.length];
 
     // Изчисли брой на всеки служител за тази услуга
-    var staffCounts = STAFF.map(function(name) {
+    var staffCounts = staffFromRows(allRows).map(function(name) {
       var cnt = allRows.filter(function(r){ return r.staff === name && normService(r.service) === svc; }).length;
       return { name: name, count: cnt };
     }).filter(function(s){ return s.count > 0; })
@@ -2173,7 +2186,7 @@ function renderStaffStats(allRows, content) {
     content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Няма данни за избрания период.</div>';
     return;
   }
-  var staffData = STAFF.map(function(name){
+  var staffData = staffFromRows(allRows).map(function(name){
     var rows  = allRows.filter(function(r){ return r.staff===name; });
     var vat   = rows.reduce(function(s,r){ return s+(parseFloat(r.price)||0); }, 0);
     var nv    = rows.reduce(function(s,r){ return s+(parseFloat(r.priceNoVat)||parseFloat(r.price_no_vat)||(parseFloat(r.price)||0)/1.2); }, 0);
@@ -2208,7 +2221,7 @@ function renderStaffStats(allRows, content) {
           '<div class="stat-avatar" style="width:38px;height:38px;font-size:15px;background:radial-gradient(circle at 30% 30%,'+col+','+col+'99)">'+s.name.charAt(0)+'</div>' +
           '<div>' +
             '<div style="font-size:15px;font-weight:800;letter-spacing:.02em">'+s.name+'</div>' +
-            '<div style="font-size:11px;color:var(--muted)">'+s.count+' услуги · <span style="color:var(--text2)">'+payConfigLabel(s.name)+'</span></div>' +
+            '<div style="font-size:11px;color:var(--muted)">'+s.count+' услуги · <span style="color:var(--text2)">'+payConfigLabel(s.name)+'</span>'+(isFormerStaff(s.name)?' · <span style="color:var(--warn);font-weight:700">напуснал</span>':'')+'</div>' +
           '</div>' +
         '</div>' +
         '<div style="text-align:right">' +
@@ -2293,39 +2306,46 @@ function renderEarningsTable() {
 
   var allRows = getRowsInRange(fromStr, toStr);
 
-  // За всеки служител, за всеки ден: натрупай nv (оборот без ддс)
-  var staffNV = {};
-  STAFF.forEach(function(name) { staffNV[name] = {}; });
+  // За всеки служител (вкл. напуснали с записи в периода), за всеки ден: натрупай nv
+  var empNames = staffFromRows(allRows);
+  var staffNV  = {};
+  empNames.forEach(function(name) { staffNV[name] = {}; });
 
   allRows.forEach(function(r) {
-    if (!r.staff || !STAFF.includes(r.staff)) return;
+    if (!r.staff || !staffNV[r.staff]) return;
     var nv = parseFloat(r.priceNoVat) || 0;
     var d  = r.date || dateStr(new Date());
     if (!staffNV[r.staff][d]) staffNV[r.staff][d] = 0;
     staffNV[r.staff][d] += nv;
   });
 
-  // Изчисли бонуси — запази и оригинала преди закръгляне
+  // Изчисли бонуси по схемата, валидна за всеки ден — запази и оригинала преди закръгляне
   var staffBonus = {};
-  STAFF.forEach(function(name) {
+  empNames.forEach(function(name) {
     staffBonus[name] = {days: {}, total: 0};
     allDates.forEach(function(d) {
-      var nv  = staffNV[name][d] || 0;
-      var raw = (name === 'Жоро' || name === 'Алекс') ? (25 + nv * 0.20) : (nv * 0.30);
-      var final = raw;
-      var rounded = false;
-      if (name !== 'Жоро' && name !== 'Алекс' && raw > 0.01 && raw < 25) {
-        final   = 25;
-        rounded = true;
+      var nv = staffNV[name][d] || 0;
+      var raw = 0, final = 0, rounded = false;
+      if (nv > 0) {
+        var c   = payConfigFor(name, d);
+        var pct = (parseFloat(c.pct)||0) / 100;
+        if (c.mode === 'fixed_pct') {
+          raw = (parseFloat(c.fixed)||0) + nv * pct;
+          final = raw;
+        } else {
+          raw = nv * pct;
+          final = raw;
+          var mn = parseFloat(c.min)||0;
+          if (mn > 0 && raw > 0.01 && raw < mn) { final = mn; rounded = true; }
+        }
       }
-      if (nv === 0) { final = 0; raw = 0; rounded = false; }
       staffBonus[name].days[d] = {final: final, raw: raw, rounded: rounded, worked: nv > 0};
       staffBonus[name].total  += final;
     });
   });
 
-  // Само активни служители
-  var activeStaff = STAFF.filter(function(name) {
+  // Само служители с възнаграждение в периода
+  var activeStaff = empNames.filter(function(name) {
     return staffBonus[name].total > 0;
   });
 
@@ -3083,7 +3103,7 @@ function showArchiveDay(year, month, day, btn) {
       '<td>' + payBadge(r.pay) + '</td></tr>';
   }).join('');
   var archDS = year + '-' + ('0'+(month+1)).slice(-2) + '-' + ('0'+day).slice(-2);
-  document.getElementById('archiveStaffBody').innerHTML = STAFF.map(function(name){
+  document.getElementById('archiveStaffBody').innerHTML = staffFromRows(j).map(function(name){
     var rows = j.filter(function(r){return r.staff===name;});
     if (!rows.length) return '';
     var vat = rows.reduce(function(s,r){return s+(parseFloat(r.price)||0);},0);
@@ -3192,7 +3212,7 @@ async function exportDay() {
   if (!journal.length) { toast('Няма записи!',true); return; }
   var pct = 0.30;
   var today = new Date().toLocaleDateString('bg-BG');
-  var staffData = STAFF.map(function(name){
+  var staffData = staffFromRows(journal).map(function(name){
     var rows=journal.filter(function(r){return r.staff===name;});
     var vat=rows.reduce(function(s,r){return s+r.price;},0);
     var nv =rows.reduce(function(s,r){return s+r.priceNoVat;},0);
@@ -3215,7 +3235,7 @@ async function exportArchiveDay() {
   var y=selectedArchDay.year, m=selectedArchDay.month, d=selectedArchDay.day;
   var data=archive[y][m][d]; var j=data.journal; var pct=data.pct||0.30;
   var expDS=y+'-'+('0'+(m+1)).slice(-2)+'-'+('0'+d).slice(-2);
-  var staffData=STAFF.map(function(name){
+  var staffData=staffFromRows(j).map(function(name){
     var rows=j.filter(function(r){return r.staff===name;});
     var vat=rows.reduce(function(s,r){return s+r.price;},0);
     var nv =rows.reduce(function(s,r){return s+r.priceNoVat;},0);
