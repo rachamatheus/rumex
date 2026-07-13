@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RUMEX Автомивка v3.8</title>
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<script>(function(){var v='34';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<script>(function(){var v='35';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -633,6 +633,35 @@ select{-webkit-appearance:none;appearance:none;background-image:url("data:image/
 <!-- TAB: STAFF MANAGER -->
 <div class="tab-content" id="tab-staffmgr">
 
+  <!-- Модал: Настройки на възнаграждение -->
+  <div id="payModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;width:100%;max-width:380px">
+      <div style="font-size:14px;font-weight:800;letter-spacing:.1em;border-left:3px solid var(--accent);padding-left:10px;margin-bottom:6px" id="payModalTitle">⚙️ Възнаграждение</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Как се изчислява дневното възнаграждение</div>
+      <label style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px">Режим</label>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button id="payModeFixed" class="btn btn-ghost btn-sm" style="flex:1" onclick="setPayMode('fixed_pct')">Твърдо + %</button>
+        <button id="payModePct" class="btn btn-ghost btn-sm" style="flex:1" onclick="setPayMode('pct')">Само %</button>
+      </div>
+      <div class="form-group" id="payFixedGroup" style="margin-bottom:12px">
+        <label>Твърда сума (€ / ден)</label>
+        <input id="payFixed" type="number" step="0.01" min="0">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Процент от оборота без ДДС (%)</label>
+        <input id="payPct" type="number" step="0.1" min="0">
+      </div>
+      <div class="form-group" id="payMinGroup" style="margin-bottom:16px">
+        <label>Минимум на ден (€) — 0 = без минимум</label>
+        <input id="payMin" type="number" step="0.01" min="0">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="savePayConfig()">💾 Запази</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('payModal').style.display='none'">Отказ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- УПРАВЛЕНИЕ НА УСТРОЙСТВА -->
   <div class="card">
     <div class="card-title" style="justify-content:space-between">
@@ -987,6 +1016,7 @@ async function loadFromSupabase() {
         if (row.key==='services') services = row.value;
         if (row.key==='registry') registry = row.value;
         if (row.key==='staff')    { STAFF = row.value; localStorage.setItem('rumex_staff', JSON.stringify(STAFF)); }
+        if (row.key==='staff_pay'){ STAFF_PAY = row.value || {}; localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY)); }
       });
     }
     var aRes = await _supa.from('archive').select('*');
@@ -1083,6 +1113,14 @@ function startSync() {
       }
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'settings'}, function(payload) {
+      var row = payload.new;
+      if (row && row.key === 'staff_pay') {
+        STAFF_PAY = row.value || {};
+        localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY));
+        var _at = (document.querySelector('.tab-content.active')||{}).id||'';
+        if (_at === 'tab-full')     renderFull();
+        if (_at === 'tab-staffmgr') renderStaffMgr();
+      }
     })
     .subscribe(function(status) {
       setSyncDot(status === 'SUBSCRIBED');
@@ -1135,6 +1173,8 @@ var registry = Array.from(new Set(BASE_PLATES.concat(_savedRegistry)));
 let archive  = JSON.parse(localStorage.getItem('rumex_archive')  || '{}');
 
 var STAFF = JSON.parse(localStorage.getItem('rumex_staff') || JSON.stringify(['Сашо','Васко','Жоро','Кирил','Алекс','Мариян','Мишо','Наско']));
+// Настройки на възнагражденията по служител: {име:{mode:'fixed_pct'|'pct', fixed, pct, min}}
+var STAFF_PAY = JSON.parse(localStorage.getItem('rumex_staff_pay') || '{}');
 const MONTHS = ['Януари','Февруари','Март','Април','Май','Юни','Юли','Август','Септември','Октомври','Ноември','Декември'];
 
 let selectedPay     = 'Карта';
@@ -1465,14 +1505,28 @@ function renderStaff() {
 }
 
 // RENDER REPORT
+// Конфигурация на възнаграждението за служител; дефолтите пазят старото поведение
+function payConfigFor(name) {
+  if (STAFF_PAY && STAFF_PAY[name]) return STAFF_PAY[name];
+  if (name === 'Жоро' || name === 'Алекс') return {mode:'fixed_pct', fixed:25, pct:20};
+  return {mode:'pct', pct:30, min:25};
+}
+function payConfigLabel(name) {
+  var c = payConfigFor(name);
+  if (c.mode === 'fixed_pct') return (parseFloat(c.fixed)||0) + '€ + ' + (parseFloat(c.pct)||0) + '%';
+  var mn = parseFloat(c.min)||0;
+  return (parseFloat(c.pct)||0) + '%' + (mn > 0 ? ' (мин ' + mn + '€)' : '');
+}
 function calcBonus(name, nv) {
+  var c   = payConfigFor(name);
+  var pct = (parseFloat(c.pct)||0) / 100;
   var bonus;
-  if (name === 'Жоро' || name === 'Алекс') {
-    bonus = 25 + nv * 0.20;
+  if (c.mode === 'fixed_pct') {
+    bonus = (parseFloat(c.fixed)||0) + nv * pct;
   } else {
-    bonus = nv * 0.30;
-    // Закръгли на 25 ако е между 0.01 и 24.99
-    if (bonus > 0.01 && bonus < 25) bonus = 25;
+    bonus = nv * pct;
+    var mn = parseFloat(c.min)||0;
+    if (mn > 0 && bonus > 0.01 && bonus < mn) bonus = mn;
   }
   return bonus;
 }
@@ -2395,6 +2449,58 @@ function removeStaffByEl(el) {
   removeStaff(el.getAttribute('data-staff'));
 }
 
+// ── НАСТРОЙКИ НА ВЪЗНАГРАЖДЕНИЕ ──
+var _payModal = {name:'', mode:'pct'};
+
+function openPayConfigByEl(el) {
+  openPayConfig(el.getAttribute('data-staff'));
+}
+
+function openPayConfig(name) {
+  if (!currentUser) return;
+  var pass = prompt('🔐 Парола за настройки на ' + name + ':');
+  if (pass === null) return;
+  if (pass !== 'rumex2026') { toast('❌ Грешна парола!', true); return; }
+  _payModal.name = name;
+  var c = payConfigFor(name);
+  document.getElementById('payModalTitle').textContent = '⚙️ ' + name + ' — възнаграждение';
+  document.getElementById('payFixed').value = parseFloat(c.fixed)||0;
+  document.getElementById('payPct').value   = parseFloat(c.pct)||0;
+  document.getElementById('payMin').value   = parseFloat(c.min)||0;
+  setPayMode(c.mode === 'fixed_pct' ? 'fixed_pct' : 'pct');
+  document.getElementById('payModal').style.display = 'flex';
+}
+
+function setPayMode(m) {
+  _payModal.mode = m;
+  var bF = document.getElementById('payModeFixed'), bP = document.getElementById('payModePct');
+  bF.style.borderColor = m==='fixed_pct' ? 'var(--accent)' : '#2a2a2a';
+  bF.style.color       = m==='fixed_pct' ? '#fff' : '#888';
+  bP.style.borderColor = m==='pct' ? 'var(--accent)' : '#2a2a2a';
+  bP.style.color       = m==='pct' ? '#fff' : '#888';
+  document.getElementById('payFixedGroup').style.display = m==='fixed_pct' ? '' : 'none';
+  document.getElementById('payMinGroup').style.display   = m==='pct' ? '' : 'none';
+}
+
+function savePayConfig() {
+  var name = _payModal.name;
+  if (!name) return;
+  var cfg = { mode: _payModal.mode, pct: parseFloat(document.getElementById('payPct').value)||0 };
+  if (cfg.mode === 'fixed_pct') cfg.fixed = parseFloat(document.getElementById('payFixed').value)||0;
+  else                          cfg.min   = parseFloat(document.getElementById('payMin').value)||0;
+  STAFF_PAY[name] = cfg;
+  localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY));
+  if (currentUser) pushSettings('staff_pay', STAFF_PAY);
+  document.getElementById('payModal').style.display = 'none';
+  // Преизчисли всички таблици, които ползват calcBonus
+  renderStaffMgr();
+  renderReport();
+  var at = (document.querySelector('.tab-content.active')||{}).id||'';
+  if (at === 'tab-full')  renderFull();
+  if (at === 'tab-stats') renderAllStats();
+  toast('✅ ' + name + ': ' + payConfigLabel(name));
+}
+
 function removeStaff(name) {
   if (!currentUser) return;
   var pass = prompt('🔐 Парола за премахване на ' + name + ':');
@@ -2529,8 +2635,9 @@ function renderStaffMgr() {
     var avatar = name.charAt(0).toUpperCase();
     return '<div class="staff-item">' +
       '<div class="staff-avatar">' + avatar + '</div>' +
-      '<div class="staff-name">' + name + '</div>' +
+      '<div class="staff-name">' + name + ' <span style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.06);border-radius:20px;padding:2px 8px;margin-left:6px">' + payConfigLabel(name) + '</span></div>' +
       '<div class="staff-actions">' +
+        '<button class="btn btn-ghost btn-sm" data-staff="'+name+'" onclick="openPayConfigByEl(this)">⚙️ Настройки</button>' +
         '<button class="btn btn-danger btn-sm" data-staff="'+name+'" onclick="removeStaffByEl(this)">✕ Премахни</button>' +
       '</div>' +
     '</div>';
