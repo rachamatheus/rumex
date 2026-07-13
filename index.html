@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RUMEX Автомивка v3.8</title>
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<script>(function(){var v='35';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
+<script>(function(){var v='36';if(location.href.indexOf('?v=')===-1&&location.href.indexOf('&v=')===-1){location.replace(location.href+(location.href.indexOf('?')===-1?'?':'&')+'v='+v);}})()</script>
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -643,6 +643,10 @@ select{-webkit-appearance:none;appearance:none;background-image:url("data:image/
         <button id="payModeFixed" class="btn btn-ghost btn-sm" style="flex:1" onclick="setPayMode('fixed_pct')">Твърдо + %</button>
         <button id="payModePct" class="btn btn-ghost btn-sm" style="flex:1" onclick="setPayMode('pct')">Само %</button>
       </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>В сила от (старите дни остават по старата схема)</label>
+        <input id="payFrom" type="date">
+      </div>
       <div class="form-group" id="payFixedGroup" style="margin-bottom:12px">
         <label>Твърда сума (€ / ден)</label>
         <input id="payFixed" type="number" step="0.01" min="0">
@@ -655,6 +659,7 @@ select{-webkit-appearance:none;appearance:none;background-image:url("data:image/
         <label>Минимум на ден (€) — 0 = без минимум</label>
         <input id="payMin" type="number" step="0.01" min="0">
       </div>
+      <div id="payHistory" style="margin-bottom:16px"></div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="savePayConfig()">💾 Запази</button>
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('payModal').style.display='none'">Отказ</button>
@@ -1505,20 +1510,34 @@ function renderStaff() {
 }
 
 // RENDER REPORT
-// Конфигурация на възнаграждението за служител; дефолтите пазят старото поведение
-function payConfigFor(name) {
-  if (STAFF_PAY && STAFF_PAY[name]) return STAFF_PAY[name];
+// Конфигурация на възнаграждението за служител; дефолтите пазят старото поведение.
+// STAFF_PAY[име] е или обект (стар формат — важи винаги), или масив от
+// {from:'YYYY-MM-DD', mode, fixed, pct, min} — всяка схема важи от датата from нататък.
+function _todayStr() { return new Date().toISOString().split('T')[0]; }
+function payConfigFor(name, dateStr) {
+  var cfg = STAFF_PAY ? STAFF_PAY[name] : null;
+  if (cfg) {
+    if (!Array.isArray(cfg)) return cfg;
+    var d = (dateStr && dateStr !== 'n/a') ? dateStr : _todayStr();
+    var best = null;
+    cfg.forEach(function(e){
+      var f = e.from || '';
+      if (f <= d && (!best || f >= (best.from||''))) best = e;
+    });
+    if (best) return best;
+    // няма схема, влязла в сила към тази дата → дефолт
+  }
   if (name === 'Жоро' || name === 'Алекс') return {mode:'fixed_pct', fixed:25, pct:20};
   return {mode:'pct', pct:30, min:25};
 }
-function payConfigLabel(name) {
-  var c = payConfigFor(name);
+function payConfigLabel(name, dateStr) {
+  var c = payConfigFor(name, dateStr);
   if (c.mode === 'fixed_pct') return (parseFloat(c.fixed)||0) + '€ + ' + (parseFloat(c.pct)||0) + '%';
   var mn = parseFloat(c.min)||0;
   return (parseFloat(c.pct)||0) + '%' + (mn > 0 ? ' (мин ' + mn + '€)' : '');
 }
-function calcBonus(name, nv) {
-  var c   = payConfigFor(name);
+function calcBonus(name, nv, dateStr) {
+  var c   = payConfigFor(name, dateStr);
   var pct = (parseFloat(c.pct)||0) / 100;
   var bonus;
   if (c.mode === 'fixed_pct') {
@@ -1529,6 +1548,19 @@ function calcBonus(name, nv) {
     if (mn > 0 && bonus > 0.01 && bonus < mn) bonus = mn;
   }
   return bonus;
+}
+// Бонус за записи от произволен период: групира по дата, така че за всеки ден
+// да важи схемата, която е била в сила тогава
+function calcBonusRows(name, rows) {
+  var byDate = {};
+  rows.forEach(function(r){
+    var d   = r.date || _todayStr();
+    var nov = parseFloat(r.priceNoVat) || parseFloat(r.price_no_vat) || (parseFloat(r.price)||0)/1.2;
+    byDate[d] = (byDate[d]||0) + nov;
+  });
+  var total = 0;
+  Object.keys(byDate).forEach(function(d){ total += calcBonus(name, byDate[d], d); });
+  return total;
 }
 
 function renderReport() {
@@ -2134,7 +2166,7 @@ function renderStaffStats(allRows, content) {
     var rows  = allRows.filter(function(r){ return r.staff===name; });
     var vat   = rows.reduce(function(s,r){ return s+(parseFloat(r.price)||0); }, 0);
     var nv    = rows.reduce(function(s,r){ return s+(parseFloat(r.priceNoVat)||parseFloat(r.price_no_vat)||(parseFloat(r.price)||0)/1.2); }, 0);
-    var bonus = calcBonus(name, nv);
+    var bonus = calcBonusRows(name, rows);
     return {name:name, count:rows.length, vat:vat, nv:nv, bonus:bonus};
   }).filter(function(s){ return s.count > 0; }).sort(function(a,b){ return b.vat-a.vat; });
 
@@ -2467,8 +2499,51 @@ function openPayConfig(name) {
   document.getElementById('payFixed').value = parseFloat(c.fixed)||0;
   document.getElementById('payPct').value   = parseFloat(c.pct)||0;
   document.getElementById('payMin').value   = parseFloat(c.min)||0;
+  document.getElementById('payFrom').value  = _todayStr();
   setPayMode(c.mode === 'fixed_pct' ? 'fixed_pct' : 'pct');
+  renderPayHistory(name);
   document.getElementById('payModal').style.display = 'flex';
+}
+
+function _fmtEntryLabel(e) {
+  if (e.mode === 'fixed_pct') return (parseFloat(e.fixed)||0) + '€ + ' + (parseFloat(e.pct)||0) + '%';
+  var mn = parseFloat(e.min)||0;
+  return (parseFloat(e.pct)||0) + '%' + (mn > 0 ? ' (мин ' + mn + '€)' : '');
+}
+
+function renderPayHistory(name) {
+  var box = document.getElementById('payHistory');
+  var cfg = STAFF_PAY[name];
+  var html = '<div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">История на схемите</div>';
+  if (!cfg) {
+    html += '<div style="font-size:12px;color:var(--muted)">Няма зададена — важи дефолтът: ' + payConfigLabel(name) + '</div>';
+  } else if (!Array.isArray(cfg)) {
+    html += '<div style="font-size:12px;color:var(--text2)">от винаги — <strong>' + _fmtEntryLabel(cfg) + '</strong></div>';
+  } else {
+    html += cfg.slice().sort(function(a,b){ return (a.from||'') < (b.from||'') ? -1 : 1; }).map(function(e){
+      var fromLbl = e.from ? e.from.split('-').reverse().join('.') : 'от винаги';
+      return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);padding:3px 0">' +
+        '<span style="flex:1">от <strong>' + fromLbl + '</strong> — ' + _fmtEntryLabel(e) + '</span>' +
+        '<button class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:11px" data-from="' + (e.from||'') + '" onclick="deletePayEntry(this)">✕</button>' +
+      '</div>';
+    }).join('');
+  }
+  box.innerHTML = html;
+}
+
+function deletePayEntry(el) {
+  var name = _payModal.name;
+  var from = el.getAttribute('data-from');
+  var cfg  = STAFF_PAY[name];
+  if (!cfg || !Array.isArray(cfg)) return;
+  cfg = cfg.filter(function(e){ return (e.from||'') !== from; });
+  if (cfg.length) STAFF_PAY[name] = cfg; else delete STAFF_PAY[name];
+  localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY));
+  if (currentUser) pushSettings('staff_pay', STAFF_PAY);
+  renderPayHistory(name);
+  renderStaffMgr();
+  renderReport();
+  toast('🗑️ Схемата е премахната');
 }
 
 function setPayMode(m) {
@@ -2485,10 +2560,18 @@ function setPayMode(m) {
 function savePayConfig() {
   var name = _payModal.name;
   if (!name) return;
-  var cfg = { mode: _payModal.mode, pct: parseFloat(document.getElementById('payPct').value)||0 };
-  if (cfg.mode === 'fixed_pct') cfg.fixed = parseFloat(document.getElementById('payFixed').value)||0;
-  else                          cfg.min   = parseFloat(document.getElementById('payMin').value)||0;
-  STAFF_PAY[name] = cfg;
+  var from = document.getElementById('payFrom').value;
+  if (!from) { toast('Избери дата „В сила от"!', true); return; }
+  var entry = { from: from, mode: _payModal.mode, pct: parseFloat(document.getElementById('payPct').value)||0 };
+  if (entry.mode === 'fixed_pct') entry.fixed = parseFloat(document.getElementById('payFixed').value)||0;
+  else                            entry.min   = parseFloat(document.getElementById('payMin').value)||0;
+  var cur = STAFF_PAY[name];
+  var arr = !cur ? [] : (Array.isArray(cur) ? cur.slice()
+            : [{from:'', mode:cur.mode, fixed:cur.fixed, pct:cur.pct, min:cur.min}]);
+  arr = arr.filter(function(e){ return (e.from||'') !== from; });
+  arr.push(entry);
+  arr.sort(function(a,b){ return (a.from||'') < (b.from||'') ? -1 : 1; });
+  STAFF_PAY[name] = arr;
   localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY));
   if (currentUser) pushSettings('staff_pay', STAFF_PAY);
   document.getElementById('payModal').style.display = 'none';
@@ -2498,7 +2581,64 @@ function savePayConfig() {
   var at = (document.querySelector('.tab-content.active')||{}).id||'';
   if (at === 'tab-full')  renderFull();
   if (at === 'tab-stats') renderAllStats();
-  toast('✅ ' + name + ': ' + payConfigLabel(name));
+  toast('✅ ' + name + ': ' + _fmtEntryLabel(entry) + ' — в сила от ' + from.split('-').reverse().join('.'));
+}
+
+// ── ПРЕИМЕНУВАНЕ НА СЛУЖИТЕЛ ──
+function renameStaffByEl(el) {
+  renameStaff(el.getAttribute('data-staff'));
+}
+
+async function renameStaff(oldName) {
+  if (!currentUser) return;
+  var pass = prompt('🔐 Парола за преименуване на ' + oldName + ':');
+  if (pass === null) return;
+  if (pass !== 'rumex2026') { toast('❌ Грешна парола!', true); return; }
+  var newName = prompt('Ново име за „' + oldName + '":', oldName);
+  if (newName === null) return;
+  newName = newName.trim();
+  if (!newName || newName === oldName) return;
+  if (STAFF.includes(newName)) { toast('❌ Вече има служител „' + newName + '"!', true); return; }
+  if (!confirm('Преименуване „' + oldName + '" → „' + newName + '" НАВСЯКЪДЕ:\n\n• списъка със служители\n• днешния журнал\n• всички архивни дни\n• графика\n• схемата на възнаграждение\n\nСтатистиката се пренася към новото име. Продължи?')) return;
+  try {
+    // 1) списък със служители
+    var idx = STAFF.indexOf(oldName);
+    if (idx >= 0) STAFF[idx] = newName;
+    saveStaff();
+    // 2) схема на възнаграждение
+    if (STAFF_PAY[oldName]) {
+      STAFF_PAY[newName] = STAFF_PAY[oldName];
+      delete STAFF_PAY[oldName];
+      localStorage.setItem('rumex_staff_pay', JSON.stringify(STAFF_PAY));
+      pushSettings('staff_pay', STAFF_PAY);
+    }
+    // 3) журнал — в паметта и всички редове в таблицата
+    journal.forEach(function(r){ if (r.staff === oldName) r.staff = newName; });
+    save();
+    await _supa.from('journal').update({staff: newName}).eq('staff', oldName);
+    // 4) архиви — всички дни, в които участва
+    var updated = 0;
+    for (var y in archive) for (var m in archive[y]) for (var d in archive[y][m]) {
+      var dd = archive[y][m][d];
+      if (dd && dd.journal && dd.journal.some(function(x){ return x.staff === oldName; })) {
+        dd.journal.forEach(function(x){ if (x.staff === oldName) x.staff = newName; });
+        await pushArchive(parseInt(y), parseInt(m), parseInt(d), dd);
+        updated++;
+      }
+    }
+    // 5) график
+    if (typeof schedData !== 'undefined' && schedData[oldName]) {
+      schedData[newName] = schedData[oldName];
+      delete schedData[oldName];
+    }
+    await _supa.from('schedule').update({staff_name: newName}).eq('staff_name', oldName);
+    initSelects();
+    renderStaffMgr();
+    renderJournal();
+    toast('✅ „' + oldName + '" → „' + newName + '" (обновени ' + updated + ' архивни дни)');
+  } catch(e) {
+    toast('⚠️ Грешка при преименуване: ' + (e.message||e), true);
+  }
 }
 
 function removeStaff(name) {
@@ -2637,6 +2777,7 @@ function renderStaffMgr() {
       '<div class="staff-avatar">' + avatar + '</div>' +
       '<div class="staff-name">' + name + ' <span style="font-size:11px;color:var(--muted);background:rgba(255,255,255,.06);border-radius:20px;padding:2px 8px;margin-left:6px">' + payConfigLabel(name) + '</span></div>' +
       '<div class="staff-actions">' +
+        '<button class="btn btn-ghost btn-sm" data-staff="'+name+'" onclick="renameStaffByEl(this)">✏️ Име</button>' +
         '<button class="btn btn-ghost btn-sm" data-staff="'+name+'" onclick="openPayConfigByEl(this)">⚙️ Настройки</button>' +
         '<button class="btn btn-danger btn-sm" data-staff="'+name+'" onclick="removeStaffByEl(this)">✕ Премахни</button>' +
       '</div>' +
@@ -2683,9 +2824,8 @@ function renderStaffStat() {
 
   var total   = rows.reduce(function(s,r){ return s+(parseFloat(r.price)||0); }, 0);
   var nv      = rows.reduce(function(s,r){ return s+(parseFloat(r.priceNoVat)||parseFloat(r.price_no_vat)||(parseFloat(r.price)||0)/1.2); }, 0);
-  var bonus   = calcBonus(name, nv);
-  var isSpec  = (name==='Жоро'||name==='Алекс');
-  var formula = isSpec ? '25€ + 20% от ' + nv.toFixed(2) + '€' : '30% от ' + nv.toFixed(2) + '€';
+  var bonus   = calcBonusRows(name, rows);
+  var formula = payConfigLabel(name) + ' от оборота без ДДС (по схемата за всеки ден)';
 
   // Брой дни с работа
   var daysWorked = new Set(rows.map(function(r){ return r.time ? r.time.split(' ')[0] : 'x'; }));
@@ -2741,7 +2881,7 @@ function renderStaffStat() {
     dayEntries.forEach(function(day){
       var dRev = dayRevMap[day];
       var dNv  = dRev / 1.2;
-      var dB   = calcBonus(name, dNv);
+      var dB   = calcBonus(name, dNv, day);
       grandTot+=dRev; grandNv+=dNv; grandBonus+=dB;
       html += '<tr>' +
         '<td style="font-weight:700">' + day + '</td>' +
@@ -2932,6 +3072,7 @@ function showArchiveDay(year, month, day, btn) {
       '<td style="color:var(--accent);font-weight:700">' + r.price.toFixed(2) + '</td>' +
       '<td>' + payBadge(r.pay) + '</td></tr>';
   }).join('');
+  var archDS = year + '-' + ('0'+(month+1)).slice(-2) + '-' + ('0'+day).slice(-2);
   document.getElementById('archiveStaffBody').innerHTML = STAFF.map(function(name){
     var rows = j.filter(function(r){return r.staff===name;});
     if (!rows.length) return '';
@@ -2941,7 +3082,7 @@ function showArchiveDay(year, month, day, btn) {
       var nov = parseFloat(r.priceNoVat) || parseFloat(r.price_no_vat) || (parseFloat(r.price)||0)/1.2;
       return s + nov;
     },0);
-    var bonus = calcBonus(name, nv);
+    var bonus = calcBonus(name, nv, archDS);
     return '<tr><td><strong>' + name + '</strong></td>' +
       '<td style="color:var(--accent);font-weight:700;text-align:center">' + vat.toFixed(2) + '</td>' +
       '<td style="text-align:center">' + rows.length + '</td>' +
@@ -3063,11 +3204,12 @@ async function exportArchiveDay() {
   if (!selectedArchDay) { toast('Избери ден!',true); return; }
   var y=selectedArchDay.year, m=selectedArchDay.month, d=selectedArchDay.day;
   var data=archive[y][m][d]; var j=data.journal; var pct=data.pct||0.30;
+  var expDS=y+'-'+('0'+(m+1)).slice(-2)+'-'+('0'+d).slice(-2);
   var staffData=STAFF.map(function(name){
     var rows=j.filter(function(r){return r.staff===name;});
     var vat=rows.reduce(function(s,r){return s+r.price;},0);
     var nv =rows.reduce(function(s,r){return s+r.priceNoVat;},0);
-    return {name:name,vat:vat,novat:nv,count:rows.length,bonus:calcBonus(name,nv)};
+    return {name:name,vat:vat,novat:nv,count:rows.length,bonus:calcBonus(name,nv,expDS)};
   });
   var payload={today:d+' '+MONTHS[m]+' '+y,pct:pct,journal:j,staff:staffData,cafe:data.cafe||0};
   var btn=event.currentTarget; btn.innerHTML='⏳...'; btn.disabled=true;
